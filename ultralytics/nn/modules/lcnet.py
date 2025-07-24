@@ -1,6 +1,16 @@
 import torch
 import torch.nn as nn
-from .conv import Conv, DWConv, h_swish  # reuse existing helper blocks
+from .conv import Conv, DWConv  # removed h_swish import
+
+
+# hard-swish activation
+class h_swish(nn.Module):
+    def __init__(self, inplace=True):
+        super().__init__()
+        self.inplace = inplace
+
+    def forward(self, x):
+        return x * torch.relu6(x + 3.0, inplace=self.inplace) / 6.0
 
 __all__ = ("LCNet", "lcnet_075")
 
