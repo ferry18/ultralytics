@@ -52,6 +52,7 @@ __all__ = (
     "PSA",
     "SCDown",
     "TorchVision",
+    "MAFR",
 )
 
 
@@ -2031,3 +2032,116 @@ class SAVPE(nn.Module):
         aggregated = score.transpose(-2, -3) @ x.reshape(B, self.c, C // self.c, -1).transpose(-1, -2)
 
         return F.normalize(aggregated.transpose(-2, -3).reshape(B, Q, -1), dim=-1, p=2)
+
+
+# --- LWMP-YOLO MAFR blocks added ---
+
+class StdPool(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        b, c, _, _ = x.size()
+        std = x.view(b, c, -1).std(dim=2, keepdim=True)
+        return std.reshape(b, c, 1, 1)
+
+
+class MCAGate(nn.Module):
+    def __init__(self, k_size, pool_types=("avg", "std")):
+        super().__init__()
+        self.pools = nn.ModuleList([])
+        for p in pool_types:
+            if p == "avg":
+                self.pools.append(nn.AdaptiveAvgPool2d(1))
+            elif p == "std":
+                self.pools.append(StdPool())
+            else:
+                raise NotImplementedError
+        self.conv = nn.Conv2d(1, 1, kernel_size=(1, k_size), padding=(0, (k_size - 1)//2), bias=False)
+        self.sigmoid = nn.Sigmoid()
+        self.weight = nn.Parameter(torch.rand(len(pool_types)))
+
+    def forward(self, x):
+        feats = [p(x) for p in self.pools]
+        out = sum(feats) / len(feats)
+        out = out.permute(0,3,2,1).contiguous()
+        out = self.conv(out)
+        out = out.permute(0,3,2,1).contiguous()
+        out = self.sigmoid(out)
+        return x * out.expand_as(x)
+
+
+class MCALayer(nn.Module):
+    def __init__(self, inp, no_spatial=True):
+        super().__init__()
+        import math
+        lambd, gamma = 1.5, 1
+        temp = round(abs((math.log2(inp) - gamma) / lambd))
+        kernel = temp if temp % 2 else temp - 1
+        self.h_cw = MCAGate(3)
+        self.w_hc = MCAGate(3)
+        self.no_spatial = no_spatial
+        if not no_spatial:
+            self.c_hw = MCAGate(kernel)
+
+    def forward(self, x):
+        x_h = x.permute(0,2,1,3).contiguous()
+        x_h = self.h_cw(x_h).permute(0,2,1,3).contiguous()
+        x_w = x.permute(0,3,2,1).contiguous()
+        x_w = self.w_hc(x_w).permute(0,3,2,1).contiguous()
+        if self.no_spatial:
+            return 0.5*(x_h + x_w)
+        x_c = self.c_hw(x)
+        return (x_c + x_h + x_w) / 3
+
+
+class LightweightMSFFM(nn.Module):
+    def __init__(self, inp):
+        super().__init__()
+        self.conv1 = nn.Conv2d(inp, inp//8, 1)
+        self.conv3 = nn.Conv2d(inp, inp//8, 3, padding=1, groups=inp//8)
+        self.conv5 = nn.Conv2d(inp, inp//8, 5, padding=2, groups=inp//8)
+        self.conv7 = nn.Conv2d(inp, inp//8, 7, padding=3, groups=inp//8)
+        self.fuse = nn.Conv2d(inp//2, inp, 1)
+        self.relu = nn.ReLU(inplace=True)
+        self.se = SELayer(inp)
+
+    def forward(self, x):
+        x1 = self.conv1(x)
+        x3 = self.conv3(x)
+        x5 = self.conv5(x)
+        x7 = self.conv7(x)
+        out = torch.cat([x1,x3,x5,x7],1)
+        out = self.relu(self.fuse(out))
+        out = self.se(out)
+        return out + x
+
+
+class MiniResidualBlock(nn.Module):
+    def __init__(self, ch):
+        super().__init__()
+        self.conv1 = nn.Conv2d(ch, ch, 3, padding=1)
+        self.bn1 = nn.BatchNorm2d(ch)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(ch, ch, 3, padding=1)
+        self.bn2 = nn.BatchNorm2d(ch)
+
+    def forward(self, x):
+        res = x
+        out = self.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        out = self.relu(out + res)
+        return out
+
+
+class MAFR(nn.Module):
+    def __init__(self, inp, no_spatial=True):
+        super().__init__()
+        self.mca = MCALayer(inp, no_spatial)
+        self.msffm = LightweightMSFFM(inp)
+        self.mini = MiniResidualBlock(inp)
+
+    def forward(self, x):
+        x = self.mca(x)
+        x = self.msffm(x)
+        return self.mini(x)
