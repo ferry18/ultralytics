@@ -59,6 +59,7 @@ from .block import (
     ResNetLayer,
     SCDown,
     TorchVision,
+    MAFR,
 )
 from .lcnet import LCNet, lcnet_075  # newly added backbone
 from .conv import (
@@ -182,4 +183,5 @@ __all__ = (
     "A2C2f",
     "LCNet",
     "lcnet_075",
+    "MAFR",
 )
