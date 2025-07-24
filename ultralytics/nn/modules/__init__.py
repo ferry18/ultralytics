@@ -60,6 +60,7 @@ from .block import (
     SCDown,
     TorchVision,
 )
+from .lcnet import LCNet, lcnet_075  # newly added backbone
 from .conv import (
     CBAM,
     ChannelAttention,
@@ -179,4 +180,6 @@ __all__ = (
     "TorchVision",
     "Index",
     "A2C2f",
+    "LCNet",
+    "lcnet_075",
 )

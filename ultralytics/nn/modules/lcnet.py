@@ -25,14 +25,9 @@ class DepthwiseSeparable(nn.Module):
 
 
 class LCNet(nn.Module):
-    """Native PyTorch implementation of PP-LCNet backbone trimmed for YOLO (no classifier head).
+    """PP-LCNet backbone trimmed for YOLO. Accepts `in_ch` and `out_ch` to align with Ultralytics parser."""
 
-    Outputs only the last feature map (P5), with internal channels controlled by `out_ch`.
-    Width multiplier adjusts every stage proportionally. P2/P3/P4 are not returned because
-    this simplified YAML wraps additional PAN neck layers afterwards.
-    """
-
-    def __init__(self, in_ch=3, out_ch=1024, scale=0.75):
+    def __init__(self, in_ch, out_ch, scale=0.75, pretrained=False):
         super().__init__()
         self.scale = scale
         # channel helper
@@ -63,6 +58,10 @@ class LCNet(nn.Module):
         )
         self.out_channels = out_ch
 
+        # Optionally load weights here if supplied later (placeholder)
+        if pretrained:
+            pass  # TODO: load when available
+
     def forward(self, x):
         x = self.stem(x)      # P1 /2
         x = self.stage2(x)    # /4
@@ -72,7 +71,14 @@ class LCNet(nn.Module):
         return x  # only P5 for YOLO head
 
 
-def lcnet_075(c2=1024, pretrained=False):
-    """Factory used by YAML. `c2` is the desired output channels (default 1024)."""
-    # pretrained flag reserved for future extension
-    return LCNet(out_ch=c2, scale=0.75)
+class lcnet_075(LCNet):
+    """Wrapper class so the YAML string 'lcnet_075' resolves to a nn.Module."""
+
+    def __init__(self, in_ch, out_ch, pretrained=False):
+        super().__init__(in_ch=in_ch, out_ch=out_ch, scale=0.75, pretrained=pretrained)
+
+# keep function alias for convenience
+def lcnet_075_fn(c2=1024, pretrained=False):
+    return LCNet(in_ch=3, out_ch=c2, scale=0.75, pretrained=pretrained)
+
+__all__ += ("lcnet_075_fn",)
