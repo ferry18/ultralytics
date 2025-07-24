@@ -101,6 +101,16 @@ from .transformer import (
     TransformerEncoderLayer,
     TransformerLayer,
 )
+from .lwmp_modules import (
+    MAFR,
+    LCBackbone,
+    lcnet_075,
+    MCALayer,
+    LightweightMSFFM,
+    MiniResidualBlock,
+    h_swish,
+    h_sigmoid,
+)
 
 __all__ = (
     "Conv",
@@ -179,4 +189,12 @@ __all__ = (
     "TorchVision",
     "Index",
     "A2C2f",
+    "MAFR",
+    "LCBackbone",
+    "lcnet_075",
+    "MCALayer",
+    "LightweightMSFFM",
+    "MiniResidualBlock",
+    "h_swish",
+    "h_sigmoid",
 )
