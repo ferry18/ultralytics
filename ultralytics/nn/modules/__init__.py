@@ -113,8 +113,9 @@ from .lwmp_modules import (
     StdPool,
     MCAGate,
 )
-from .lcnet_wrapper import lcnet_075
+from .lcnet_wrapper import lcnet_075 as lcnet_075_old
 from .lwmp_exact import LWMP_PPLCNet
+from .lcnet_yolo import lcnet_075
 
 __all__ = (
     "Conv",
