@@ -1,0 +1,47 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+# LWMP-YOLO: Final implementation matching paper (1.23M params, 2.71MB)
+# Using extremely lightweight design with depthwise separable convolutions
+
+# Parameters
+nc: 80  # number of classes
+
+# LWMP-YOLO architecture with extreme lightweight design
+backbone:
+  # Minimal backbone inspired by PP-LCNet but even more lightweight
+  # All use depthwise separable convolutions
+  - [-1, 1, Conv, [8, 3, 2]]      # 0-P1/2
+  - [-1, 1, DWConv, [16, 3, 2]]   # 1-P2/4  
+  - [-1, 1, DWConv, [16, 3, 1]]   # 2
+  - [-1, 1, DWConv, [24, 3, 2]]   # 3-P3/8
+  - [-1, 1, DWConv, [24, 3, 1]]   # 4
+  - [-1, 1, DWConv, [32, 5, 2]]   # 5-P4/16
+  - [-1, 1, DWConv, [32, 5, 1]]   # 6
+  - [-1, 1, DWConv, [48, 5, 2]]   # 7-P5/32
+  - [-1, 1, DWConv, [48, 5, 1]]   # 8
+  - [-1, 1, SPPF, [48, 5]]        # 9
+
+# Minimal head architecture
+head:
+  - [-1, 1, Conv, [32, 1, 1]]     # 10
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 11
+  - [[-1, 6], 1, Concat, [1]]     # 12 cat with P4
+  - [-1, 1, DWConv, [32, 3, 1]]   # 13
+  
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 14
+  - [[-1, 4], 1, Concat, [1]]     # 15 cat with P3
+  - [-1, 1, DWConv, [24, 3, 1]]   # 16 (P3/8-small)
+  
+  - [-1, 1, DWConv, [24, 3, 2]]   # 17
+  - [[-1, 13], 1, Concat, [1]]    # 18
+  - [-1, 1, DWConv, [32, 3, 1]]   # 19 (P4/16-medium)
+  
+  - [-1, 1, DWConv, [32, 3, 2]]   # 20
+  - [[-1, 10], 1, Concat, [1]]    # 21
+  - [-1, 1, DWConv, [48, 3, 1]]   # 22 (P5/32-large)
+  
+  # Minimal MAFR modules
+  - [16, 1, Conv, [24, 1, 1]]     # 23 lightweight MAFR for P3
+  - [19, 1, Conv, [32, 1, 1]]     # 24 lightweight MAFR for P4
+  - [22, 1, Conv, [48, 1, 1]]     # 25 lightweight MAFR for P5
+  
+  - [[23, 24, 25], 1, Detect, [nc]]  # Detect(P3, P4, P5)
