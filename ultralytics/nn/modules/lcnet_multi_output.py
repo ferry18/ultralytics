@@ -137,9 +137,17 @@ class MultiOutputHandler:
         def parse_model_with_multi_output(d, ch, verbose=True):
             """Modified parse_model that pre-allocates space for multi-output modules."""
             import copy
-            from ultralytics.nn.modules import *
             from ultralytics.utils import LOGGER
             import torch
+            # Import specific modules needed
+            from ultralytics.nn.modules import (Conv, ConvTranspose, GhostConv, Bottleneck, GhostBottleneck, 
+                                               SPP, SPPF, C2f, DWConv, Focus, BottleneckCSP, C1, C2, C3, C3TR, 
+                                               C3Ghost, nn, DWConvTranspose2d, C3x, C2fPSA, C2PSA, RepC3, C2fCIB, 
+                                               C3k2, ELAN, AConv, ADown, RepNCSPELAN4, SPPELAN, C2fAttn, SELayer, 
+                                               LightweightMSFFM, MiniResidualBlock, MAFR, MCALayer, lcnet_075, 
+                                               AIFI, HGStem, HGBlock, ResNetLayer, Concat, Detect, WorldDetect, 
+                                               Segment, Pose, OBB, ImagePoolingAttn, v10Detect, YOLOEDetect, 
+                                               YOLOESegment, RTDETRDecoder, CBLinear, CBFuse, TorchVision, Index, make_divisible)
             
             # Parse the YAML
             if verbose:

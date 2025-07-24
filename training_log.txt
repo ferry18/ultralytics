@@ -1,0 +1,37 @@
+Traceback (most recent call last):
+  File "/workspace/train_lwmp_final.py", line 14, in <module>
+    original_predict = patch_yolo_for_lcnet()
+  File "/workspace/tasks_patch.py", line 16, in patch_yolo_for_lcnet
+    import ultralytics.nn.tasks
+  File "/workspace/ultralytics/__init__.py", line 11, in <module>
+    from ultralytics.models import NAS, RTDETR, SAM, YOLO, YOLOE, FastSAM, YOLOWorld
+  File "/workspace/ultralytics/models/__init__.py", line 3, in <module>
+    from .fastsam import FastSAM
+  File "/workspace/ultralytics/models/fastsam/__init__.py", line 3, in <module>
+    from .model import FastSAM
+  File "/workspace/ultralytics/models/fastsam/model.py", line 6, in <module>
+    from ultralytics.engine.model import Model
+  File "/workspace/ultralytics/engine/model.py", line 12, in <module>
+    from ultralytics.engine.results import Results
+  File "/workspace/ultralytics/engine/results.py", line 16, in <module>
+    from ultralytics.data.augment import LetterBox
+  File "/workspace/ultralytics/data/__init__.py", line 3, in <module>
+    from .base import BaseDataset
+  File "/workspace/ultralytics/data/base.py", line 16, in <module>
+    from ultralytics.data.utils import FORMATS_HELP_MSG, HELP_URL, IMG_FORMATS, check_file_speeds
+  File "/workspace/ultralytics/data/utils.py", line 18, in <module>
+    from ultralytics.nn.autobackend import check_class_names
+  File "/workspace/ultralytics/nn/__init__.py", line 3, in <module>
+    from .tasks import (
+    ...<11 lines>...
+    )
+  File "/workspace/ultralytics/nn/tasks.py", line 14, in <module>
+    from ultralytics.nn.modules import (
+    ...<61 lines>...
+    )
+  File "/workspace/ultralytics/nn/modules/__init__.py", line 118, in <module>
+    from .lcnet_multi_output import lcnet_075, MultiOutputHandler
+  File "/workspace/ultralytics/nn/modules/lcnet_multi_output.py", line 140
+    from ultralytics.nn.modules import *
+                                       ^
+SyntaxError: import * only allowed at module level
