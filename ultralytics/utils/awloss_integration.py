@@ -9,7 +9,7 @@ from typing import Any, Dict, Tuple
 
 from .loss import BboxLoss, TaskAlignedAssigner, make_anchors, xywh2xyxy
 from .metrics import bbox_iou
-from .ops import dist2bbox
+from ultralytics.utils.tal import dist2bbox
 from ..nn.losses.awloss import AWLoss, NormalizedWassersteinDistance, AreaWeighting, ScaleDifference
 
 

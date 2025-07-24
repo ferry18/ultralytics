@@ -30,6 +30,16 @@ def awloss_wrapper(self, batch, preds=None):
 DetectionModel.loss = awloss_wrapper
 
 
+def monkey_patch_awloss():
+    """Apply AWLoss monkey patch to DetectionModel."""
+    # The patch is already applied at module import
+    # This function exists for explicit control
+    if not hasattr(DetectionModel, '_original_loss'):
+        DetectionModel._original_loss = original_loss_fn
+    DetectionModel.loss = awloss_wrapper
+    return original_loss_fn
+
+
 def train_lwmp_yolo_awloss(
     model_yaml='ultralytics/cfg/models/11/yolo11-lwmp-author.yaml',
     data_yaml='ultralytics/cfg/datasets/coco8-grayscale.yaml',

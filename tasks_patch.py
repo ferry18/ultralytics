@@ -30,7 +30,27 @@ def patch_yolo_for_lcnet():
         
         for m in self.model:
             if m.f != -1:  # if not from previous layer
-                x = y[m.f] if isinstance(m.f, int) else [x if j == -1 else y[j] for j in m.f]  # from earlier layers
+                # Special handling for accessing lcnet features
+                if isinstance(m.f, list):
+                    x = []
+                    for j in m.f:
+                        if j == -1:
+                            x.append(y[-1] if y else None)
+                        elif j in [1, 2, 3] and hasattr(self, '_lcnet_features'):
+                            # Map to lcnet features: 1->P2, 2->P3, 3->P4
+                            feature_map = {1: 'p2', 2: 'p3', 3: 'p4'}
+                            x.append(self._lcnet_features.get(feature_map.get(j)))
+                        elif j < len(y):
+                            x.append(y[j])
+                        else:
+                            # Handle out of range indices gracefully
+                            x.append(None)
+                else:
+                    if m.f in [1, 2, 3] and hasattr(self, '_lcnet_features'):
+                        feature_map = {1: 'p2', 2: 'p3', 3: 'p4'}
+                        x = self._lcnet_features.get(feature_map.get(m.f))
+                    else:
+                        x = y[m.f] if m.f < len(y) else None
             
             if profile:
                 self._profile_one_layer(m, x, dt)
@@ -47,16 +67,24 @@ def patch_yolo_for_lcnet():
                     lcnet_features['p3'] = m.p3  
                     lcnet_features['p4'] = m.p4
                     
-                    # lcnet_075 is at index 0, so:
-                    # index 1 = P2, index 2 = P3, index 3 = P4
-                    if len(y) == 1:  # Right after lcnet_075
-                        y.extend([m.p2, m.p3, m.p4])
-                        # Update save list dynamically
-                        if hasattr(self, 'save'):
-                            for idx in [1, 2, 3]:
-                                if idx not in self.save:
-                                    self.save.append(idx)
-                                    self.save = sorted(self.save)
+                    # lcnet_075 is at index 0, but we need to insert at the right positions
+                    # The author's YAML expects: index 1 = P2, index 2 = P3, index 3 = P4
+                    # But with current indexing, we have: 0=lcnet, 1=SPPF, 2=C2PSA
+                    # So we need to inject P2,P3,P4 features at positions 1,2,3
+                    
+                    # Store the features globally for later access
+                    if not hasattr(self, '_lcnet_features'):
+                        self._lcnet_features = {}
+                    self._lcnet_features['p2'] = m.p2
+                    self._lcnet_features['p3'] = m.p3
+                    self._lcnet_features['p4'] = m.p4
+                    
+                    # Modify save list to include these indices
+                    if hasattr(self, 'save'):
+                        for idx in [1, 2, 3]:
+                            if idx not in self.save:
+                                self.save.append(idx)
+                        self.save = sorted(self.save)
             
             # Save output normally
             y.append(x if m.i in self.save else None)
