@@ -25,14 +25,13 @@ class lcnet_075(nn.Module):
         # Get all features from backbone
         p2, p3, p4, p5 = self.backbone(x)
         
-        # Store features for later access
-        # The YOLO framework will look for these when building the head
-        self._features = {
-            'p2': p2,  # P2/4 - 48 channels (64 * 0.75)
-            'p3': p3,  # P3/8 - 96 channels (128 * 0.75)
-            'p4': p4,  # P4/16 - 192 channels (256 * 0.75)
-            'p5': p5   # P5/32 - 384 channels (512 * 0.75)
-        }
+        # Store features as attributes so YOLO can access them
+        # The author's YAML expects to access these via indices
+        self.p2 = p2  # P2/4 - 48 channels  
+        self.p3 = p3  # P3/8 - 96 channels
+        self.p4 = p4  # P4/16 - 192 channels
+        self.p5 = p5  # P5/32 - 384 channels
         
-        # Return P5 as the main output (for SPPF)
+        # Return P5 as the main output
+        # The YAML expects this for SPPF
         return p5
