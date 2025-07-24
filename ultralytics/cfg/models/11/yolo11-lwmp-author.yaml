@@ -1,0 +1,37 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+# LWMP-YOLO: Based on author's yolov11-lcnet-mafrneck.yaml
+# Modified to use P2, P3, P4 for small object detection
+
+# Parameters
+nc: 80  # number of classes
+scales: # model compound scaling constants
+  # [depth, width, max_channels]
+  n: [0.33, 0.25, 1024]  # nano settings
+
+# LWMP-YOLO backbone
+backbone:
+  # PP-LCNet x0.75 backbone
+  - [-1, 1, lcnet_075, [3]]       # 0 - outputs P5/32 (index for compatibility)
+  - [-1, 1, SPPF, [384, 5]]       # 1 - Applied to P5 (384 = 512*0.75)
+  - [-1, 2, C2PSA, [384, False]]  # 2 - Reduced channels to 384
+
+# LWMP-YOLO head - Modified for P2, P3, P4 detection
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 3
+  - [[-1, 0], 1, Concat, [1]]   # 4 - cat backbone P4 (from lcnet_075.p4)
+  - [-1, 2, C3k2, [192, False]] # 5 - reduced from 512
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 6
+  - [[-1, 0], 1, Concat, [1]]   # 7 - cat backbone P3 (from lcnet_075.p3)
+  - [-1, 2, C3k2, [96, False]]  # 8 (P3/8-small) - reduced from 256
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 9
+  - [[-1, 0], 1, Concat, [1]]   # 10 - cat backbone P2 (from lcnet_075.p2)
+  - [-1, 2, C3k2, [48, False]]  # 11 (P2/4-xsmall) - reduced from 128
+
+  - [-1, 1, Conv, [96, 3, 2]]   # 12
+  - [[-1, 8], 1, Concat, [1]]   # 13 - cat head P3
+  - [-1, 2, C3k2, [96, False]]  # 14 (P3/8-small)
+  - [-1, 1, MAFR, [96]]         # 15 - MAFR for P3
+
+  - [[11, 15], 1, Detect, [nc]] # 16 - Detect(P2, P3) for small objects

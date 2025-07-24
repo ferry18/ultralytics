@@ -104,7 +104,6 @@ from .transformer import (
 from .lwmp_modules import (
     MAFR,
     LCBackbone,
-    lcnet_075,
     MCALayer,
     LightweightMSFFM,
     MiniResidualBlock,
@@ -112,6 +111,7 @@ from .lwmp_modules import (
     h_sigmoid,
     SELayer,
 )
+from .lcnet_correct import lcnet_075
 
 __all__ = (
     "Conv",
