@@ -1,41 +1,74 @@
 # Ultralytics YOLO 🚀, AGPL-3.0 license
-# LWMP-YOLO Final: Achieving 1.23M parameters, 2.71MB size
-# Using PP-LCNet backbone, MAFR modules, P2+P3 detection
+# LWMP-YOLO Final Implementation
+# Paper: "Improved YOLO for long range detection of small drones"
+# Target: 1.23M parameters, 2.71MB size, 95.7% mAP@0.5
 
 # Parameters
 nc: 80  # number of classes
+scales:
+  n: [0.33, 0.25, 512]  # nano scale for lightweight model
 
-# LWMP-YOLO architecture - optimized for 1.23M params
+# LWMP-YOLO backbone - PP-LCNet x0.75 architecture
 backbone:
-  # PP-LCNet x0.75 backbone with minimal head
-  - [-1, 1, lcnet_075, [3]]     # 0
-  - [-1, 1, SPPF, [384, 5]]     # 1
+  # Stage 0 - Stem
+  - [-1, 1, Conv, [12, 3, 2]]           # 0-P1/2 (scaled from 16)
   
-  # Reduce channels significantly for lightweight design
-  - [-1, 1, Conv, [128, 1, 1]]  # 2
-  - [-1, 1, Conv, [64, 3, 2]]   # 3 - Additional downsampling
+  # Stage 1
+  - [-1, 1, DWConv, [12, 3, 1]]         # 1 - Depthwise
+  - [-1, 1, Conv, [24, 1, 1]]           # 2 - Pointwise (scaled from 32)
+  - [-1, 1, DWConv, [24, 3, 2]]         # 3 - Depthwise P2/4
+  - [-1, 1, Conv, [48, 1, 1]]           # 4 - Pointwise (scaled from 64)
   
-# Minimal head for P2/P3 detection
+  # Stage 2  
+  - [-1, 1, DWConv, [48, 3, 2]]         # 5 - Depthwise P3/8
+  - [-1, 1, Conv, [96, 1, 1]]           # 6 - Pointwise (scaled from 128)
+  - [-1, 1, SELayer, [96]]              # 7 - SE module
+  
+  # Stage 3 - 5x5 kernels with SE
+  - [-1, 1, DWConv, [96, 5, 2]]         # 8 - Depthwise P4/16
+  - [-1, 1, Conv, [192, 1, 1]]          # 9 - Pointwise (scaled from 256)
+  - [-1, 1, SELayer, [192]]             # 10 - SE module
+  - [-1, 1, DWConv, [192, 5, 1]]        # 11 - Depthwise
+  - [-1, 1, Conv, [192, 1, 1]]          # 12 - Pointwise
+  - [-1, 1, SELayer, [192]]             # 13 - SE module
+  
+  # Stage 4
+  - [-1, 1, DWConv, [192, 5, 2]]        # 14 - Depthwise P5/32  
+  - [-1, 1, Conv, [384, 1, 1]]          # 15 - Pointwise (scaled from 512)
+  - [-1, 1, SELayer, [384]]             # 16 - SE module
+  
+  # Final 1x1 conv
+  - [-1, 1, Conv, [384, 1, 1]]          # 17 - Final conv
+  - [-1, 1, SPPF, [384, 5]]             # 18 - SPPF
+
+# LWMP-YOLO head with MAFR
 head:
-  # Simple FPN-style connections
-  - [1, 1, Conv, [64, 1, 1]]    # 4 - from SPPF
-  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 5
-  - [-1, 1, Conv, [48, 3, 1]]   # 6 - P4/16
+  # FPN - Create P4
+  - [-1, 1, Conv, [192, 1, 1]]                    # 19
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]   # 20
+  - [[-1, 13], 1, Concat, [1]]                   # 21 - cat with stage 3
+  - [-1, 1, C2f, [192, False]]                   # 22 - P4
   
-  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 7
-  - [-1, 1, Conv, [32, 3, 1]]   # 8 - P3/8
+  # FPN - Create P3  
+  - [-1, 1, Conv, [96, 1, 1]]                     # 23
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]   # 24
+  - [[-1, 7], 1, Concat, [1]]                    # 25 - cat with stage 2
+  - [-1, 1, C2f, [96, False]]                    # 26 - P3
   
-  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 9
-  - [-1, 1, Conv, [24, 3, 1]]   # 10 - P2/4
+  # FPN - Create P2 for small objects
+  - [-1, 1, Conv, [48, 1, 1]]                     # 27
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]   # 28
+  - [[-1, 4], 1, Concat, [1]]                    # 29 - cat with stage 1
+  - [-1, 1, C2f, [48, False]]                    # 30 - P2
   
-  # Path aggregation
-  - [-1, 1, Conv, [24, 3, 2]]   # 11
-  - [[-1, 8], 1, Concat, [1]]   # 12
-  - [-1, 1, Conv, [32, 3, 1]]   # 13 - Enhanced P3
+  # PAN - Bottom-up
+  - [-1, 1, Conv, [48, 3, 2]]                     # 31
+  - [[-1, 26], 1, Concat, [1]]                   # 32
+  - [-1, 1, C2f, [96, False]]                    # 33 - P3 enhanced
   
-  # MAFR modules (ultra-lightweight)
-  - [10, 1, Conv, [24, 1, 1]]   # 14 - Simplified MAFR for P2
-  - [13, 1, Conv, [32, 1, 1]]   # 15 - Simplified MAFR for P3
+  # Apply MAFR modules for feature refinement
+  - [30, 1, MAFR, [48]]                          # 34 - P2 with MAFR
+  - [33, 1, MAFR, [96]]                          # 35 - P3 with MAFR
   
-  # Detection head for P2 and P3
-  - [[14, 15], 1, Detect, [nc]] # 16
+  # Detection head (P2 + P3 for small objects)
+  - [[34, 35], 1, Detect, [nc]]                  # 36 - Final detection

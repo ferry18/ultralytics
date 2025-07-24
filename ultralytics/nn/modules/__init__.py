@@ -114,6 +114,7 @@ from .lwmp_modules import (
     MCAGate,
 )
 from .lcnet_wrapper import lcnet_075
+from .lwmp_exact import LWMP_PPLCNet
 
 __all__ = (
     "Conv",
@@ -203,4 +204,5 @@ __all__ = (
     "SELayer",
     "StdPool",
     "MCAGate",
+    "LWMP_PPLCNet",
 )

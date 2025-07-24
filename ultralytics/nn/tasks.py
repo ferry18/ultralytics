@@ -72,6 +72,7 @@ from ultralytics.nn.modules import (
     MAFR,
     SELayer,
     lcnet_075,
+    LWMP_PPLCNet,
 )
 from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, YAML, colorstr, emojis
 from ultralytics.utils.checks import check_requirements, check_suffix, check_yaml
