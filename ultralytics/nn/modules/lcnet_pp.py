@@ -1,7 +1,6 @@
 """
-Correct PP-LCNet implementation for LWMP-YOLO.
-This implementation outputs P2, P3, P4 features instead of P3, P4, P5
-to better detect small objects as per the paper.
+PP-LCNet implementation for LWMP-YOLO that properly integrates with YOLO architecture.
+This implementation follows the author's design where P2 and P3 are used for detection.
 """
 
 import torch
@@ -11,7 +10,6 @@ import math
 
 
 def make_divisible(v, divisor=8, min_value=None):
-    """Ensure channel number is divisible by 8."""
     if min_value is None:
         min_value = divisor
     new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
@@ -21,13 +19,11 @@ def make_divisible(v, divisor=8, min_value=None):
 
 
 class HardSwish(nn.Module):
-    """Hard Swish activation function."""
     def forward(self, x):
         return x * F.relu6(x + 3, inplace=True) / 6
 
 
 class SELayer(nn.Module):
-    """Squeeze-and-Excitation layer for PP-LCNet."""
     def __init__(self, channel, reduction=4):
         super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
@@ -46,7 +42,6 @@ class SELayer(nn.Module):
 
 
 class DepSepConv(nn.Module):
-    """Depthwise Separable Convolution for PP-LCNet."""
     def __init__(self, inp, oup, kernel_size, stride, use_se=False):
         super().__init__()
         assert stride in [1, 2]
@@ -82,14 +77,10 @@ class DepSepConv(nn.Module):
         return x
 
 
-class lcnet_075(nn.Module):
-    """
-    PP-LCNet x0.75 backbone for LWMP-YOLO.
-    Modified to output P2, P3, P4 features for small object detection.
-    """
-    def __init__(self, pretrained=True, c1=3):
+class PPLCNet(nn.Module):
+    """PP-LCNet backbone that outputs features for YOLO."""
+    def __init__(self, scale=0.75, in_channels=3):
         super().__init__()
-        scale = 0.75
         
         # PP-LCNet configuration
         # [kernel_size, channels, stride, use_SE]
@@ -105,62 +96,48 @@ class lcnet_075(nn.Module):
             [5, 256, 1, 0],
             [5, 256, 1, 0],
             [5, 256, 1, 0],
-            [5, 512, 2, 1],  # P5/32 (not used for output)
+            [5, 512, 2, 1],  # P5/32
             [5, 512, 1, 1],
         ]
         
         # Build first layer
         input_channel = make_divisible(16 * scale, 8)
-        self.first_conv = nn.Sequential(
-            nn.Conv2d(c1, input_channel, 3, 2, 1, bias=False),
+        self.stem = nn.Sequential(
+            nn.Conv2d(in_channels, input_channel, 3, 2, 1, bias=False),
             nn.BatchNorm2d(input_channel),
             HardSwish()
         )
         
         # Build stages
-        stages = []
+        self.stages = nn.ModuleList()
         for k, c, s, use_se in cfgs:
             output_channel = make_divisible(c * scale, 8)
-            stages.append(DepSepConv(input_channel, output_channel, k, s, use_se))
+            self.stages.append(DepSepConv(input_channel, output_channel, k, s, use_se))
             input_channel = output_channel
+            
+        # Store which stages output P2, P3, P4, P5
+        self.p2_idx = 2   # After 64x1
+        self.p3_idx = 4   # After 128x1
+        self.p4_idx = 10  # After 256x1 (5th)
+        self.p5_idx = 12  # After 512x1
         
-        self.stages = nn.ModuleList(stages)
-        
-        # Important: We need to output features at specific indices
-        # Index 2 (after 64x1) -> P2/4
-        # Index 4 (after 128x1) -> P3/8  
-        # Index 10 (after 256x1 block 5) -> P4/16
-        self.out_indices = [2, 4, 10]
-        
-        # Initialize weights
-        self._initialize_weights()
-    
-    def _initialize_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
-                if m.bias is not None:
-                    m.bias.data.zero_()
-            elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-    
     def forward(self, x):
-        x = self.first_conv(x)
+        x = self.stem(x)
         
-        features = []
+        # Store features at different scales
+        p2, p3, p4, p5 = None, None, None, None
+        
         for i, stage in enumerate(self.stages):
             x = stage(x)
-            if i in self.out_indices:
-                features.append(x)
-        
-        # Store intermediate features for multi-scale detection
-        if len(features) >= 3:
-            self.p2 = features[0]  # P2/4 - 48 channels
-            self.p3 = features[1]  # P3/8 - 96 channels  
-            self.p4 = features[2]  # P4/16 - 192 channels
-        
-        # Return the last feature (P5/32) for SPPF
-        # The head will access p2, p3, p4 through special indexing
-        return x  # P5/32 - 384 channels
+            if i == self.p2_idx:
+                p2 = x
+            elif i == self.p3_idx:
+                p3 = x
+            elif i == self.p4_idx:
+                p4 = x
+            elif i == self.p5_idx:
+                p5 = x
+                
+        # Return P2, P3, P4 for the head (following author's design)
+        # But also store P5 as the main output
+        return p2, p3, p4, p5

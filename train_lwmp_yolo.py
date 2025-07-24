@@ -80,7 +80,7 @@ def train_lwmp_yolo():
     print("Initializing LWMP-YOLO model...")
     print("Configuration: PP-LCNet x0.75 backbone + MAFR + P2/P3 detection")
     print("Target: 1.23M parameters, 2.71MB model size")
-    model = YOLO('ultralytics/cfg/models/11/yolo11-lwmp-correct.yaml')
+    model = YOLO('ultralytics/cfg/models/11/yolo11-lwmp-author-corrected.yaml')
     
     # Training arguments
     args = {

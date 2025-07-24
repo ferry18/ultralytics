@@ -1,52 +1,42 @@
 # Ultralytics YOLO 🚀, AGPL-3.0 license
-# YOLO11-LWMP model with LCbackbone, MAFR, AWLoss and Pruning
+# LWMP-YOLO: Lightweight YOLO for small object detection
+# Based on paper implementation with PP-LCNet backbone, MAFR modules, P2+P3 detection
 
 # Parameters
 nc: 80  # number of classes
-scales: # model compound scaling constants, i.e. 'model=yolo11n.yaml' will call yolo11.yaml with scale 'n'
+scales: # model compound scaling constants
   # [depth, width, max_channels]
-  n: [0.33, 0.25, 1024]  # YOLOv11n summary
-  s: [0.33, 0.50, 1024]  # YOLOv11s summary
-  m: [0.67, 0.75, 768]   # YOLOv11m summary
-  l: [1.00, 1.00, 512]   # YOLOv11l summary
-  x: [1.00, 1.25, 512]   # YOLOv11x summary
+  n: [0.33, 0.25, 1024]  # nano scale
 
-# YOLOv11 backbone with LCBackbone
+# LWMP-YOLO backbone (PP-LCNet x0.75)
 backbone:
   # [from, repeats, module, args]
-  - [-1, 1, Conv, [16, 3, 2]]  # 0-P1/2
-  - [-1, 1, Conv, [32, 3, 2]]  # 1-P2/4  
-  - [-1, 1, C3k2, [32, True]]  # 2
-  - [-1, 1, Conv, [64, 3, 2]]  # 3-P3/8
-  - [-1, 1, C3k2, [64, True]]  # 4
-  - [-1, 1, Conv, [128, 3, 2]] # 5-P4/16
-  - [-1, 1, C3k2, [128, True]] # 6
-  - [-1, 1, Conv, [256, 3, 2]] # 7-P5/32
-  - [-1, 1, C3k2, [256, True]] # 8
-  - [-1, 1, SPPF, [256, 5]]    # 9
-  - [-1, 1, C2PSA, [256]]      # 10
+  - [-1, 1, lcnet_075, [3, True]]   # 0 - PP-LCNet backbone, outputs 384ch @ P5/32
+  - [-1, 1, SPPF, [384, 5]]         # 1 - SPPF with 384 channels
 
-# YOLOv11 head with MAFR
+# LWMP-YOLO head
 head:
-  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
-  - [[-1, 6], 1, Concat, [1]]  # cat backbone P4
-  - [-1, 2, C3k2, [128, False]]  # 13
-
-  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
-  - [[-1, 4], 1, Concat, [1]]  # cat backbone P3
-  - [-1, 2, C3k2, [64, False]]  # 16 (P3/8-small)
-
-  - [-1, 1, Conv, [128, 3, 2]]
-  - [[-1, 13], 1, Concat, [1]]  # cat head P4
-  - [-1, 2, C3k2, [256, False]]  # 19 (P4/16-medium)
-
-  - [-1, 1, Conv, [256, 3, 2]]
-  - [[-1, 10], 1, Concat, [1]]  # cat head P5
-  - [-1, 2, C3k2, [256, False]]  # 22 (P5/32-large)
+  # Build FPN layers for P4, P3, P2
+  - [-1, 1, Conv, [192, 1, 1]]                  # 2 - reduce channels
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 3
+  - [-1, 1, C2f, [192, False]]                  # 4 - P4/16 (192ch)
   
-  # Add MAFR module before detection head
-  - [16, 1, MAFR, [64]]   # 23 for P3
-  - [19, 1, MAFR, [256]]  # 24 for P4
-  - [22, 1, MAFR, [256]]  # 25 for P5
-
-  - [[23, 24, 25], 1, Detect, [nc]]  # Detect(P3, P4, P5)
+  - [-1, 1, Conv, [96, 1, 1]]                   # 5 - reduce channels  
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 6
+  - [-1, 1, C2f, [96, False]]                   # 7 - P3/8 (96ch)
+  
+  - [-1, 1, Conv, [48, 1, 1]]                   # 8 - reduce channels
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 9
+  - [-1, 1, C2f, [48, False]]                   # 10 - P2/4 (48ch)
+  
+  # Path aggregation network
+  - [-1, 1, Conv, [48, 3, 2]]                   # 11 - downsample
+  - [[-1, 7], 1, Concat, [1]]                   # 12 - cat with P3
+  - [-1, 1, C2f, [96, False]]                   # 13 - P3/8
+  
+  # MAFR modules for feature refinement
+  - [10, 1, MAFR, [48]]                         # 14 - MAFR for P2
+  - [13, 1, MAFR, [96]]                         # 15 - MAFR for P3
+  
+  # Detection head (P2 and P3 only for small objects)
+  - [[14, 15], 1, Detect, [nc]]                 # 16 - Detect(P2, P3)

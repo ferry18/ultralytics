@@ -110,8 +110,10 @@ from .lwmp_modules import (
     h_swish,
     h_sigmoid,
     SELayer,
+    StdPool,
+    MCAGate,
 )
-from .lcnet_correct import lcnet_075
+from .lcnet_wrapper import lcnet_075
 
 __all__ = (
     "Conv",
@@ -199,4 +201,6 @@ __all__ = (
     "h_swish",
     "h_sigmoid",
     "SELayer",
+    "StdPool",
+    "MCAGate",
 )

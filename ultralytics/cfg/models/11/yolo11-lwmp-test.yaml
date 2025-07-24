@@ -1,0 +1,14 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+# LWMP-YOLO Test - Without SPPF
+
+# Parameters
+nc: 80  # number of classes
+
+# Backbone
+backbone:
+  - [-1, 1, lcnet_075, [True]]      # 0 - outputs 384ch @ P5/32
+
+# Head
+head:
+  # Direct detection on backbone output
+  - [-1, 1, Detect, [nc]]           # 1 - Single scale detection
