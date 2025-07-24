@@ -79,8 +79,8 @@ from ultralytics.utils.loss import (
     v8OBBLoss,
     v8PoseLoss,
     v8SegmentationLoss,
-    AWDetectionLoss,
 )
+from ultralytics.utils.awloss import AWDetectionLoss
 from ultralytics.utils.ops import make_divisible
 from ultralytics.utils.patches import torch_load
 from ultralytics.utils.plotting import feature_visualization
