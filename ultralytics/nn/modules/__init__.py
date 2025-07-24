@@ -115,7 +115,7 @@ from .lwmp_modules import (
 )
 from .lcnet_wrapper import lcnet_075 as lcnet_075_old
 from .lwmp_exact import LWMP_PPLCNet
-from .lcnet_final import lcnet_075
+from .lcnet_multi_output import lcnet_075, MultiOutputHandler
 
 __all__ = (
     "Conv",
@@ -206,4 +206,5 @@ __all__ = (
     "StdPool",
     "MCAGate",
     "LWMP_PPLCNet",
+    "MultiOutputHandler",
 )
