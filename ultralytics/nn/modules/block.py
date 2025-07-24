@@ -2104,7 +2104,7 @@ class LightweightMSFFM(nn.Module):
         self.conv7 = nn.Conv2d(inp, inp//8, 7, padding=3, groups=inp//8)
         self.fuse = nn.Conv2d(inp//2, inp, 1)
         self.relu = nn.ReLU(inplace=True)
-        self.se = SELayer(inp)
+        self.se = SE(inp)
 
     def forward(self, x):
         x1 = self.conv1(x)
