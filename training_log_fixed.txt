@@ -1,0 +1,42 @@
+✓ YOLO patched for lcnet_075 multi-output support
+
+================================================================================
+LWMP-YOLO Training - Final Implementation
+================================================================================
+
+Configuration:
+  Model: ultralytics/cfg/models/11/yolo11-lwmp-author.yaml
+  Dataset: ultralytics/cfg/datasets/coco8-grayscale.yaml
+  Device: cpu
+
+Components:
+  ✓ PP-LCNet x0.75 backbone (exact paper implementation)
+  ✓ MAFR module (Multi-scale Adaptive Feature Refinement)
+  ✓ AWLoss (Area-weighted Wasserstein Loss)
+  ✓ P2 layer for small object detection
+  ✓ YOLO patched for multi-output support
+
+Loading model...
+WARNING ⚠️ no model scale passed. Assuming scale='n'.
+Traceback (most recent call last):
+  File "/workspace/train_lwmp_final.py", line 47, in main
+    model = YOLO(model_yaml)
+  File "/workspace/ultralytics/models/yolo/model.py", line 79, in __init__
+    super().__init__(model=model, task=task, verbose=verbose)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ultralytics/engine/model.py", line 149, in __init__
+    self._new(model, task=task, verbose=verbose)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ultralytics/engine/model.py", line 261, in _new
+    self.model = (model or self._smart_load("model"))(cfg_dict, verbose=verbose and RANK == -1)  # build model
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ultralytics/nn/tasks.py", line 405, in __init__
+    self.model, self.save = parse_model(deepcopy(self.yaml), ch=ch, verbose=verbose)  # model, savelist
+                            ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/ultralytics/nn/tasks.py", line 1725, in parse_model
+    args.append([ch[x] for x in f])
+                 ~~^^^
+IndexError: list index out of range
+
+❌ Error: list index out of range
+✓ YOLO patch removed

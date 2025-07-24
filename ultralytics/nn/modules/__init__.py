@@ -101,6 +101,23 @@ from .transformer import (
     TransformerEncoderLayer,
     TransformerLayer,
 )
+from .lwmp_modules import (
+    MAFR,
+    LCBackbone,
+    MCALayer,
+    LightweightMSFFM,
+    MiniResidualBlock,
+    h_swish,
+    h_sigmoid,
+    SELayer,
+    StdPool,
+    MCAGate,
+)
+from .lcnet_wrapper import lcnet_075 as lcnet_075_old
+from .lwmp_exact import LWMP_PPLCNet
+from .lcnet_multi_output import lcnet_075 as lcnet_075_multi
+from .lcnet_lwmp import lcnet_075
+from .lcnet_lwmp import lcnet_075 as lcnet_lwmp
 
 __all__ = (
     "Conv",
@@ -179,4 +196,19 @@ __all__ = (
     "TorchVision",
     "Index",
     "A2C2f",
+    "MAFR",
+    "LCBackbone",
+    "lcnet_075",
+    "MCALayer",
+    "LightweightMSFFM",
+    "MiniResidualBlock",
+    "h_swish",
+    "h_sigmoid",
+    "SELayer",
+    "StdPool",
+    "MCAGate",
+    "LWMP_PPLCNet",
+    "MultiOutputHandler",
+    "lcnet_lwmp",
+    "lcnet_075",
 )

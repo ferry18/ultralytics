@@ -1,0 +1,40 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+# LWMP-YOLO based on author's design with corrections
+# Uses P2 and P3 for detection as specified in the paper
+
+# Parameters
+nc: 80  # number of classes
+scales:
+  n: [0.33, 0.25, 1024]
+
+# Backbone - PP-LCNet x0.75
+backbone:
+  - [-1, 1, lcnet_075, [True]]      # 0 - outputs 384ch @ P5/32
+  - [-1, 1, SPPF, [384, 5]]         # 1 - SPPF on P5 (384 = 512*0.75)
+  - [-1, 1, C2f, [384, False]]      # 2 - C2f instead of C2PSA to avoid division error
+
+# Head - Creates P4, P3, P2 from P5
+head:
+  # Upsample P5 to P4 scale
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 3
+  - [-1, 1, Conv, [192, 1, 1]]      # 4 - Reduce to P4 channels (192 = 256*0.75)
+  - [-1, 1, C3k2, [192, False]]     # 5 - P4/16
+  
+  # Upsample to P3 scale
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 6
+  - [-1, 1, Conv, [96, 1, 1]]       # 7 - Reduce to P3 channels (96 = 128*0.75)
+  - [-1, 1, C3k2, [96, False]]      # 8 - P3/8
+  
+  # Upsample to P2 scale
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 9
+  - [-1, 1, Conv, [48, 1, 1]]       # 10 - Reduce to P2 channels (48 = 64*0.75)
+  - [-1, 1, C3k2, [48, False]]      # 11 - P2/4
+  
+  # Path aggregation - P2 -> P3
+  - [-1, 1, Conv, [48, 3, 2]]       # 12 - Downsample P2
+  - [[-1, 8], 1, Concat, [1]]       # 13 - Concat with P3
+  - [-1, 1, C3k2, [144, False]]     # 14 - 144 = 48 + 96
+  - [-1, 1, MAFR, [144]]            # 15 - MAFR for P3
+  
+  # Detect on P2 and P3 (for small objects)
+  - [[11, 15], 1, Detect, [nc]]     # 16 - Detect(P2, P3)

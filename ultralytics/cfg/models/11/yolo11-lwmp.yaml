@@ -1,0 +1,42 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+# LWMP-YOLO: Lightweight YOLO for small object detection
+# Based on paper implementation with PP-LCNet backbone, MAFR modules, P2+P3 detection
+
+# Parameters
+nc: 80  # number of classes
+scales: # model compound scaling constants
+  # [depth, width, max_channels]
+  n: [0.33, 0.25, 1024]  # nano scale
+
+# LWMP-YOLO backbone (PP-LCNet x0.75)
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, lcnet_075, [3, True]]   # 0 - PP-LCNet backbone, outputs 384ch @ P5/32
+  - [-1, 1, SPPF, [384, 5]]         # 1 - SPPF with 384 channels
+
+# LWMP-YOLO head
+head:
+  # Build FPN layers for P4, P3, P2
+  - [-1, 1, Conv, [192, 1, 1]]                  # 2 - reduce channels
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 3
+  - [-1, 1, C2f, [192, False]]                  # 4 - P4/16 (192ch)
+  
+  - [-1, 1, Conv, [96, 1, 1]]                   # 5 - reduce channels  
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 6
+  - [-1, 1, C2f, [96, False]]                   # 7 - P3/8 (96ch)
+  
+  - [-1, 1, Conv, [48, 1, 1]]                   # 8 - reduce channels
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 9
+  - [-1, 1, C2f, [48, False]]                   # 10 - P2/4 (48ch)
+  
+  # Path aggregation network
+  - [-1, 1, Conv, [48, 3, 2]]                   # 11 - downsample
+  - [[-1, 7], 1, Concat, [1]]                   # 12 - cat with P3
+  - [-1, 1, C2f, [96, False]]                   # 13 - P3/8
+  
+  # MAFR modules for feature refinement
+  - [10, 1, MAFR, [48]]                         # 14 - MAFR for P2
+  - [13, 1, MAFR, [96]]                         # 15 - MAFR for P3
+  
+  # Detection head (P2 and P3 only for small objects)
+  - [[14, 15], 1, Detect, [nc]]                 # 16 - Detect(P2, P3)

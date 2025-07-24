@@ -36,6 +36,7 @@ from ultralytics.nn.modules import (
     C3Ghost,
     C3k2,
     C3x,
+    C2PSA,
     CBFuse,
     CBLinear,
     Classify,
@@ -68,6 +69,10 @@ from ultralytics.nn.modules import (
     YOLOEDetect,
     YOLOESegment,
     v10Detect,
+    MAFR,
+    SELayer,
+    lcnet_075,
+    LWMP_PPLCNet,
 )
 from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, YAML, colorstr, emojis
 from ultralytics.utils.checks import check_requirements, check_suffix, check_yaml
