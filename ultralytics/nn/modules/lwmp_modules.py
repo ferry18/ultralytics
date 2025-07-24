@@ -269,93 +269,88 @@ def make_divisible(v, divisor, min_value=None):
     return new_v
 
 
+class DepSepConv(nn.Module):
+    """Depthwise Separable Convolution for PP-LCNet."""
+    def __init__(self, inp, oup, kernel_size, stride, use_se):
+        super(DepSepConv, self).__init__()
+
+        assert stride in [1, 2]
+        padding = (kernel_size - 1) // 2
+
+        if use_se:
+            self.conv = nn.Sequential(
+                # dw
+                nn.Conv2d(inp, inp, kernel_size, stride, padding, groups=inp, bias=False),
+                nn.BatchNorm2d(inp),
+                h_swish(),
+                # SE
+                SELayer(inp, reduction=4),
+                # pw-linear
+                nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
+                nn.BatchNorm2d(oup),
+                h_swish(),
+            )
+        else:
+            self.conv = nn.Sequential(
+                # dw
+                nn.Conv2d(inp, inp, kernel_size, stride, padding, groups=inp, bias=False),
+                nn.BatchNorm2d(inp),
+                h_swish(),
+                # pw-linear
+                nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
+                nn.BatchNorm2d(oup),
+                h_swish()
+            )
+
+    def forward(self, x):
+        return self.conv(x)
+
+
 class LCBackbone(nn.Module):
     """PP-LCNet based lightweight backbone for YOLO."""
-    def __init__(self, scale=0.75, in_channels=3, act='swish'):
+    def __init__(self, scale=0.75, in_channels=3):
         super(LCBackbone, self).__init__()
         
         self.scale = scale
         
-        # Define PP-LCNet architecture
-        # Format: [kernel_size, exp_size, out_channels, use_se, act, stride]
-        self.net_config = [
-            # Stage 0
-            [3, 16, 16, False, 'relu', 1],
-            # Stage 1
-            [3, 32, 24, False, 'relu', 2],
-            [3, 36, 24, False, 'relu', 1],
-            # Stage 2  
-            [5, 72, 40, True, 'swish', 2],
-            [5, 72, 40, True, 'swish', 1],
-            # Stage 3
-            [5, 120, 80, True, 'swish', 2],
-            [5, 120, 80, True, 'swish', 1],
-            [3, 200, 80, True, 'swish', 1],
-            [3, 184, 80, True, 'swish', 1],
-            [3, 184, 80, True, 'swish', 1],
-            [3, 480, 112, True, 'swish', 1],
-            [3, 672, 112, True, 'swish', 1],
-            # Stage 4
-            [5, 672, 160, True, 'swish', 2],
-            [5, 960, 160, True, 'swish', 1],
-            [5, 960, 160, True, 'swish', 1],
-            [5, 960, 160, True, 'swish', 1],
-            [5, 960, 160, True, 'swish', 1],
+        # PP-LCNet configuration from the paper
+        # [kernel_size, channels, stride, use_SE]
+        self.cfgs = [
+            [3,  32, 1, 0],
+            [3,  64, 2, 0],
+            [3,  64, 1, 0],
+            [3, 128, 2, 0],
+            [3, 128, 1, 0],
+            [5, 256, 2, 0],
+            [5, 256, 1, 0],
+            [5, 256, 1, 0],
+            [5, 256, 1, 0],
+            [5, 256, 1, 0],
+            [5, 256, 1, 0],
+            [5, 512, 2, 1],
+            [5, 512, 1, 1],
         ]
         
-        # First conv
-        self.conv1 = nn.Conv2d(in_channels, make_divisible(16 * scale, 8), 3, 2, 1, bias=False)
-        self.bn1 = nn.BatchNorm2d(make_divisible(16 * scale, 8))
-        self.act1 = h_swish()
-        
-        # Build stages
-        self.stages = nn.ModuleList()
-        self.stage_out_channels = []
-        
+        # Build first layer
         input_channel = make_divisible(16 * scale, 8)
-        
-        for i, (k, exp, c, se, act, s) in enumerate(self.net_config):
-            output_channel = make_divisible(c * scale, 8)
-            exp_channel = make_divisible(exp * scale, 8)
-            
-            # Build the block
-            if i == 0:
-                # First block doesn't use expansion
-                block = LCBlock(input_channel, output_channel, s, se_ratio=0.25 if se else 0, act=act)
-            else:
-                # Regular block with expansion
-                block = nn.Sequential(
-                    # Expand
-                    nn.Conv2d(input_channel, exp_channel, 1, 1, 0, bias=False),
-                    nn.BatchNorm2d(exp_channel),
-                    h_swish() if act == 'swish' else nn.ReLU(inplace=True),
-                    # Depthwise
-                    nn.Conv2d(exp_channel, exp_channel, k, s, k//2, groups=exp_channel, bias=False),
-                    nn.BatchNorm2d(exp_channel),
-                    h_swish() if act == 'swish' else nn.ReLU(inplace=True),
-                    # SE
-                    SELayer(exp_channel, reduction=4) if se else nn.Identity(),
-                    # Project
-                    nn.Conv2d(exp_channel, output_channel, 1, 1, 0, bias=False),
-                    nn.BatchNorm2d(output_channel),
-                )
-            
-            self.stages.append(block)
-            input_channel = output_channel
-            
-            # Save output channels for each stage
-            if i in [2, 4, 11, 16]:  # End of each stage
-                self.stage_out_channels.append(output_channel)
-        
-        # Last conv
-        self.last_conv = nn.Sequential(
-            nn.Conv2d(input_channel, make_divisible(1280 * scale, 8), 1, 1, 0, bias=False),
-            nn.BatchNorm2d(make_divisible(1280 * scale, 8)),
-            h_swish(),
-            nn.Conv2d(make_divisible(1280 * scale, 8), 1024, 1, 1, 0, bias=False),
-            nn.BatchNorm2d(1024),
+        self.first_conv = nn.Sequential(
+            nn.Conv2d(in_channels, input_channel, 3, 2, 1, bias=False),
+            nn.BatchNorm2d(input_channel),
             h_swish()
         )
+        
+        # Build PP-LCNet blocks
+        self.stages = nn.ModuleList()
+        self.stage_out_indices = []  # Store indices where we'll extract features
+        
+        for i, (k, c, s, use_se) in enumerate(self.cfgs):
+            output_channel = make_divisible(c * scale, 8)
+            self.stages.append(DepSepConv(input_channel, output_channel, k, s, use_se))
+            input_channel = output_channel
+            
+            # Mark feature extraction points (after downsampling)
+            if i in [2, 4, 12]:  # After 64x1, 128x1, 512x1
+                self.stage_out_indices.append(i)
         
         # Initialize weights
         self._initialize_weights()
@@ -363,51 +358,52 @@ class LCBackbone(nn.Module):
     def _initialize_weights(self):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out')
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
                 if m.bias is not None:
-                    nn.init.zeros_(m.bias)
+                    m.bias.data.zero_()
             elif isinstance(m, nn.BatchNorm2d):
-                nn.init.ones_(m.weight)
-                nn.init.zeros_(m.bias)
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
             elif isinstance(m, nn.Linear):
-                nn.init.normal_(m.weight, 0, 0.01)
+                m.weight.data.normal_(0, 0.001)
                 if m.bias is not None:
-                    nn.init.zeros_(m.bias)
+                    m.bias.data.zero_()
     
     def forward(self, x):
         # First conv
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.act1(x)
+        x = self.first_conv(x)
         
-        # Stages
+        # Extract features at different scales
         features = []
-        for i, block in enumerate(self.stages):
-            x = block(x)
-            if i in [2, 4, 11, 16]:  # End of each stage
+        for i, stage in enumerate(self.stages):
+            x = stage(x)
+            if i in self.stage_out_indices:
                 features.append(x)
         
-        # Last conv
-        x = self.last_conv(x)
-        features.append(x)
-        
-        # Return features for FPN
-        # Return P3, P4, P5 (indices 1, 2, 4)
-        return features[1], features[2], features[4]
+        # Return P3, P4, P5 features for YOLO
+        return features[0], features[1], features[2]
 
 
 class lcnet_075(nn.Module):
     """LCNet model with 0.75x width multiplier wrapped for YOLO integration."""
-    def __init__(self, c1=3, pretrained=True):
+    def __init__(self, c1=3, c2=None, pretrained=True):
         super().__init__()
         self.backbone = LCBackbone(scale=0.75, in_channels=c1)
-        # Get output channels for P3, P4, P5
-        self.out_channels = []
+        # Store feature maps for multi-scale output
+        self.features = []
+        
+        # Calculate output channels
         with torch.no_grad():
             x = torch.zeros(1, c1, 256, 256)
-            outs = self.backbone(x)
-            self.out_channels = [o.shape[1] for o in outs]
+            p3, p4, p5 = self.backbone(x)
+            self.out_channels = [p3.shape[1], p4.shape[1], p5.shape[1]]
+            # YOLO expects c2 to be the output channel of the last feature
+            self.c = p5.shape[1]
     
     def forward(self, x):
         p3, p4, p5 = self.backbone(x)
-        return p5  # Return only P5 for the next layer, others will be accessed via indexing
+        # Store features for later access in head
+        self.features = [p3, p4, p5]
+        # Return P5 for the next layer (SPPF)
+        return p5

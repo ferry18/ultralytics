@@ -76,9 +76,10 @@ def train_lwmp_yolo():
     # Note: For actual grayscale training, we would convert images here
     # convert_dataset_to_grayscale()  # Uncomment to actually convert
     
-    # Initialize model with LWMP configuration
-    print("Initializing LWMP-YOLO model...")
-    model = YOLO('ultralytics/cfg/models/11/yolo11n-lwmp.yaml')
+    # Initialize model with LWMP configuration (PP-LCNet backbone + MAFR)
+    print("Initializing LWMP-YOLO model with PP-LCNet backbone and MAFR modules...")
+    print("Model configuration: PP-LCNet x0.75 + MAFR + AWLoss + Pruning")
+    model = YOLO('ultralytics/cfg/models/11/yolo11-pplcnet-mafr.yaml')
     
     # Training arguments
     args = {

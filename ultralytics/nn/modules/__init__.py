@@ -110,6 +110,7 @@ from .lwmp_modules import (
     MiniResidualBlock,
     h_swish,
     h_sigmoid,
+    SELayer,
 )
 
 __all__ = (
@@ -197,4 +198,5 @@ __all__ = (
     "MiniResidualBlock",
     "h_swish",
     "h_sigmoid",
+    "SELayer",
 )
