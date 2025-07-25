@@ -2145,3 +2145,31 @@ class MAFR(nn.Module):
         x = self.mca(x)
         x = self.msffm(x)
         return self.mini(x)
+
+
+# ------------------------------
+#   SE Block (Squeeze-and-Excitation)
+# ------------------------------
+class SE(nn.Module):
+    """Simple channel-wise Squeeze-and-Excitation.
+
+    Args:
+        inp (int): number of input channels.
+        r (int, optional): reduction ratio. Default is 16.
+    """
+
+    def __init__(self, inp: int, r: int = 16):
+        super().__init__()
+        r = max(1, r)  # prevent division by zero
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Sequential(
+            nn.Conv2d(inp, max(1, inp // r), 1, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(max(1, inp // r), inp, 1, bias=False),
+            nn.Sigmoid(),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:  # noqa: D401
+        """Forward pass that scales the input tensor's channels."""
+        scale = self.fc(self.avg_pool(x))
+        return x * scale
