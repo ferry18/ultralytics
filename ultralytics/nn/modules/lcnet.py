@@ -73,12 +73,17 @@ class LCNet(nn.Module):
             pass  # TODO: load when available
 
     def forward(self, x):
+        # Stem & early stages
         x = self.stem(x)      # P1 /2
-        x = self.stage2(x)    # /4
-        x = self.stage3(x)    # /8
-        x = self.stage4(x)    # /16
-        x = self.stage5(x)    # /32
-        return x  # only P5 for YOLO head
+        x = self.stage2(x)    # P2 /4
+
+        # Produce multiscale feature maps
+        p3 = self.stage3(x)   # P3 /8  (low-level features, smaller channels)
+        p4 = self.stage4(p3)  # P4 /16
+        p5 = self.stage5(p4)  # P5 /32 (highest-level features)
+
+        # Return in order (high->low) as expected by the custom YAML
+        return p5, p4, p3
 
 
 class lcnet_075(LCNet):
