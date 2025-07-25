@@ -17,7 +17,7 @@ backbone:
   - [0, 1, Index, [96, 1]]                      # 2  P4 (stride 16, 96 ch)
   - [0, 1, Index, [48, 2]]                      # 3  P3 (stride 8, 48 ch)
   - [1, 1, SPPF, [1024, 5]]                      # 4  P5′
-  - [4, 2, C2PSA, [1024]]                        # 5  refined P5′
+  - [4, 2, C2PSA, [1024]]                        # 5  refined P5′ (arg is pre-scale)
 
 head:
   - [5, 1, nn.Upsample, [None, 2, "nearest"]]    # 6  ↑2 → stride 16
