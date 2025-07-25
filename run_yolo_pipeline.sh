@@ -6,13 +6,14 @@ set -euo pipefail
 # -----------------------------
 # Configuration
 # -----------------------------
-# Override with e.g. DEVICE=0 bash run_yolo_pipeline.sh
+# Override with e.g. BASE_EPOCHS=2 FT_EPOCHS=1 DEVICE=0 bash run_yolo_pipeline.sh
 DEVICE="${DEVICE:-auto}"
 RUNS_DIR="${RUNS_DIR:-runs}"
 DATA_CFG="ultralytics/cfg/datasets/coco8-grayscale.yaml"
 BASE_MODEL_CFG="LMWP-YOLO-main/yolov11-lcnet-mafrneck.yaml"
 PRUNE_PERCENT=0.20  # 20 % channel sparsity
-EPOCHS=50
+BASE_EPOCHS="${BASE_EPOCHS:-2}"   # baseline epochs
+FT_EPOCHS="${FT_EPOCHS:-1}"       # fine-tune epochs
 BATCH=16
 IMGSZ=640
 
@@ -31,7 +32,7 @@ log "Starting baseline training …"
 ~/.local/bin/yolo train \
   model="$BASE_MODEL_CFG" \
   data="$DATA_CFG" \
-  epochs=$EPOCHS \
+  epochs=$BASE_EPOCHS \
   batch=$BATCH \
   imgsz=$IMGSZ \
   device=$DEVICE \
@@ -100,7 +101,7 @@ log "Fine-tuning pruned model …"
 ~/.local/bin/yolo train \
   model="$PRUNED_YAML" \
   data="$DATA_CFG" \
-  epochs=$EPOCHS \
+  epochs=$FT_EPOCHS \
   batch=$BATCH \
   imgsz=$IMGSZ \
   resume \
