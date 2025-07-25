@@ -29,8 +29,7 @@ head:
   - [10, 2, C3k2, [256, False]]                  # 11 P3′
 
   - [11, 1, nn.Upsample, [None, 2, "nearest"]]   # 12 ↑2 → stride 4 (P2 path)
-  - [[12, 3], 1, Concat, [1]]                    # 13 cat(P3′↑, P3)
-  - [13, 2, C3k2, [128, False]]                  # 14 P2
-  - [14, 1, MAFR, [128]]                         # 15 enhanced P2
+  - [12, 2, C3k2, [128, False]]                  # 13 P2 (no concat)
+  - [13, 1, MAFR, [128]]                         # 14 enhanced P2
 
-  - [[15, 11, 8], 1, Detect, [nc]]               # 16 Detect(P2, P3′, P4′)
+  - [[14, 11, 8], 1, Detect, [nc]]               # 15 Detect(P2, P3′, P4′)
