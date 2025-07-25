@@ -1745,6 +1745,7 @@ def parse_model(d, ch, verbose=True):
         m_ = torch.nn.Sequential(*(m(*args) for _ in range(n))) if n > 1 else m(*args)  # module
         t = str(m)[8:-2].replace("__main__.", "")  # module type
         m_.np = sum(x.numel() for x in m_.parameters())  # number params
+        _set_out_channels(m_)  # ensure channel attribute matches width scaling
         m_.i, m_.f, m_.type = i, f, t  # attach index, 'from' index, type
         if verbose:
             LOGGER.info(f"{i:>3}{str(f):>20}{n_:>3}{m_.np:10.0f}  {t:<45}{str(args):<30}")  # print
@@ -1865,3 +1866,27 @@ def guess_model_task(model):
         "Explicitly define task for your model, i.e. 'task=detect', 'segment', 'classify','pose' or 'obb'."
     )
     return "detect"  # assume detect
+
+
+# -----------------------------------------------------------------------------
+# Helper to ensure every module exposes the *runtime* out_channels after width
+# scaling. This prevents downstream mismatches when channels are reduced by the
+# model scale (e.g. 0.25 for the "n" variant).
+# -----------------------------------------------------------------------------
+
+
+def _set_out_channels(module):
+    """Recursively set .out_channels for custom blocks if missing or outdated."""
+    # Case 1: common pattern where a Conv is stored under attribute `conv`
+    if hasattr(module, "conv") and isinstance(module.conv, torch.nn.Conv2d):
+        module.out_channels = module.conv.out_channels
+    # Case 2: blocks that end with a Conv named `cv2` (e.g. C3*, C2f*)
+    elif hasattr(module, "cv2") and isinstance(module.cv2, torch.nn.Conv2d):
+        module.out_channels = module.cv2.out_channels
+    # Fallback: search first child Conv
+    elif not hasattr(module, "out_channels"):
+        # Choose the *last* Conv2d encountered (closest to the module output)
+        for sub in reversed(list(module.modules())):
+            if isinstance(sub, torch.nn.Conv2d):
+                module.out_channels = sub.out_channels
+                break
