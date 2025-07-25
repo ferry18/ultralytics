@@ -1885,7 +1885,8 @@ def _set_out_channels(module):
         module.out_channels = module.cv2.out_channels
     # Fallback: search first child Conv
     elif not hasattr(module, "out_channels"):
-        for sub in module.modules():
+        # Choose the *last* Conv2d encountered (closest to the module output)
+        for sub in reversed(list(module.modules())):
             if isinstance(sub, torch.nn.Conv2d):
                 module.out_channels = sub.out_channels
                 break
