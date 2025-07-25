@@ -29,6 +29,8 @@ class DepthwiseSeparable(nn.Module):
             # 1x1 projection
             Conv(hidden_ch, out_ch, k=1, s=1, act=False),
         )
+        # Expose output channel count for Ultralytics parser compatibility
+        self.out_channels = out_ch
 
     def forward(self, x):
         return self.conv(x)
