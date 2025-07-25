@@ -1,0 +1,45 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+# YOLOv11 with LCNet backbone and MAFR neck - Fixed version 2
+
+# Parameters
+nc: 80  # number of classes
+scales: # model compound scaling constants, i.e. 'model=yolov8n.yaml' will call yolov8.yaml with scale 'n'
+  # [depth, width, max_channels]
+  n: [0.33, 0.25, 1024]
+  s: [0.33, 0.50, 1024]
+  m: [0.67, 0.75, 768]
+  l: [1.00, 1.00, 512]
+  x: [1.00, 1.25, 512]
+awloss: true
+
+# YOLOv11 backbone - using lcnet with fixed output channels
+backbone:
+  # The lcnet_075 outputs three feature maps: P5 (1024 ch), P4 (96 ch), P3 (48 ch)
+  # We need to ensure these channel counts are preserved regardless of width scaling
+  - [-1, 1, lcnet_075, [1024]]                      # 0: outputs [P5, P4, P3]
+  - [0, 1, Index, [0]]                              # 1: P5 (1024 ch)
+  - [0, 1, Index, [1]]                              # 2: P4 (96 ch)
+  - [0, 1, Index, [2]]                              # 3: P3 (48 ch)
+  
+  # Process P5 - we'll explicitly set channel counts to avoid width scaling issues
+  - [1, 1, Conv, [1024, 1, 1]]                      # 4: Force P5 to 1024 channels
+  - [4, 1, SPPF, [1024, 5]]                         # 5: SPPF maintains 1024 channels
+  - [5, 2, C2PSA, [1024]]                           # 6: C2PSA outputs 1024 channels
+
+# YOLOv11 head with explicit channel management
+head:
+  - [6, 1, nn.Upsample, [None, 2, "nearest"]]      # 7: upsample P5' (1024 ch)
+  - [2, 1, Conv, [96, 1, 1]]                        # 8: Force P4 to 96 channels
+  - [[7, 8], 1, Concat, [1]]                        # 9: concat = 1024 + 96 = 1120 ch
+  - [9, 2, C3k2, [512, False]]                      # 10: P4' (512 ch)
+  
+  - [10, 1, nn.Upsample, [None, 2, "nearest"]]     # 11: upsample P4' (512 ch)
+  - [3, 1, Conv, [48, 1, 1]]                        # 12: Force P3 to 48 channels
+  - [[11, 12], 1, Concat, [1]]                     # 13: concat = 512 + 48 = 560 ch
+  - [13, 2, C3k2, [256, False]]                     # 14: P3' (256 ch)
+  
+  - [14, 1, nn.Upsample, [None, 2, "nearest"]]     # 15: upsample P3' (256 ch)
+  - [15, 2, C3k2, [128, False]]                     # 16: P2 (128 ch)
+  - [16, 1, MAFR, [128]]                            # 17: enhanced P2 (128 ch)
+  
+  - [[17, 14, 10], 1, Detect, [nc]]                # 18: Detect(P2, P3', P4')
