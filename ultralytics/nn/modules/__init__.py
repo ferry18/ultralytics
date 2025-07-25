@@ -62,6 +62,7 @@ from .block import (
     MAFR,
 )
 from .lcnet import LCNet, lcnet_075  # newly added backbone
+from .lcnet_fixed import lcnet_075_fixed  # fixed version
 from .conv import (
     CBAM,
     ChannelAttention,
@@ -183,5 +184,6 @@ __all__ = (
     "A2C2f",
     "LCNet",
     "lcnet_075",
+    "lcnet_075_fixed",
     "MAFR",
 )

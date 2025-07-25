@@ -69,6 +69,7 @@ from ultralytics.nn.modules import (
     YOLOESegment,
     v10Detect,
     lcnet_075,
+    lcnet_075_fixed,
     MAFR,
 )
 from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, YAML, colorstr, emojis
@@ -1648,6 +1649,7 @@ def parse_model(d, ch, verbose=True):
             C2fCIB,
             A2C2f,
             lcnet_075,
+            lcnet_075_fixed,
         }
     )
     repeat_modules = frozenset(  # modules with 'repeat' arguments

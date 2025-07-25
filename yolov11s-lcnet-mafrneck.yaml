@@ -1,0 +1,37 @@
+# Ultralytics YOLO 🚀, AGPL-3.0 license
+# YOLOv11s with LCNet backbone and MAFR neck - Properly scaled for width=0.5
+# Parameters
+nc: 80  # number of classes
+scales: # model compound scaling constants
+  # [depth, width, max_channels]
+  n: [0.33, 0.25, 1024]
+  s: [0.33, 0.50, 1024]  # Using scale 's' with width=0.5
+  m: [0.67, 0.75, 768]
+  l: [1.00, 1.00, 512]
+  x: [1.00, 1.25, 512]
+awloss: true
+
+# YOLOv11s backbone - all channels adjusted for width=0.5
+backbone:
+  # lcnet_075 outputs (1024, 96, 48) but with width=0.5 becomes (512, 48, 24)
+  - [-1, 1, lcnet_075, [1024]]                    # 0  (P5, P4, P3)
+  - [0, 1, Index, [512, 0]]                       # 1  P5 (512 ch after width scaling)
+  - [0, 1, Index, [48, 1]]                        # 2  P4 (48 ch after width scaling)
+  - [0, 1, Index, [24, 2]]                        # 3  P3 (24 ch after width scaling)
+  - [1, 1, SPPF, [512, 5]]                        # 4  P5′ (512 ch)
+  - [4, 1, C2PSA, [512]]                          # 5  refined P5′ (512 ch, n=1 due to depth=0.33)
+
+head:
+  - [5, 1, nn.Upsample, [None, 2, "nearest"]]     # 6  ↑2 → stride 16
+  - [[6, 2], 1, Concat, [1]]                      # 7  cat(P5′, P4) = 512 + 48 = 560 ch
+  - [7, 1, C3k2, [256, False]]                    # 8  P4′ (256 ch)
+
+  - [8, 1, nn.Upsample, [None, 2, "nearest"]]     # 9  ↑2 → stride 8
+  - [[9, 3], 1, Concat, [1]]                      # 10 cat(P4′, P3) = 256 + 24 = 280 ch
+  - [10, 1, C3k2, [128, False]]                   # 11 P3′ (128 ch)
+
+  - [11, 1, nn.Upsample, [None, 2, "nearest"]]    # 12 ↑2 → stride 4 (P2 path)
+  - [12, 1, C3k2, [64, False]]                    # 13 P2 (64 ch)
+  - [13, 1, MAFR, [64]]                           # 14 enhanced P2 (64 ch)
+
+  - [[14, 11, 8], 1, Detect, [nc]]                # 15 Detect(P2, P3′, P4′)
