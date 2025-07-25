@@ -68,6 +68,8 @@ from ultralytics.nn.modules import (
     YOLOEDetect,
     YOLOESegment,
     v10Detect,
+    lcnet_075,
+    MAFR,
 )
 from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, YAML, colorstr, emojis
 from ultralytics.utils.checks import check_requirements, check_suffix, check_yaml
@@ -79,6 +81,7 @@ from ultralytics.utils.loss import (
     v8PoseLoss,
     v8SegmentationLoss,
 )
+from ultralytics.utils.awloss import AWDetectionLoss
 from ultralytics.utils.ops import make_divisible
 from ultralytics.utils.patches import torch_load
 from ultralytics.utils.plotting import feature_visualization
@@ -498,7 +501,7 @@ class DetectionModel(BaseModel):
 
     def init_criterion(self):
         """Initialize the loss criterion for the DetectionModel."""
-        return E2EDetectLoss(self) if getattr(self, "end2end", False) else v8DetectionLoss(self)
+        return E2EDetectLoss(self) if getattr(self, "end2end", False) else (AWDetectionLoss(self) if self.yaml.get("awloss", False) else v8DetectionLoss(self))
 
 
 class OBBModel(DetectionModel):
@@ -1644,6 +1647,7 @@ def parse_model(d, ch, verbose=True):
             SCDown,
             C2fCIB,
             A2C2f,
+            lcnet_075,
         }
     )
     repeat_modules = frozenset(  # modules with 'repeat' arguments
@@ -1663,6 +1667,7 @@ def parse_model(d, ch, verbose=True):
             C2fCIB,
             C2PSA,
             A2C2f,
+            lcnet_075,
         }
     )
     for i, (f, n, m, args) in enumerate(d["backbone"] + d["head"]):  # from, number, module, args
@@ -1747,7 +1752,7 @@ def parse_model(d, ch, verbose=True):
         layers.append(m_)
         if i == 0:
             ch = []
-        ch.append(c2)
+        ch.append(getattr(m_, "out_channels", c2))
     return torch.nn.Sequential(*layers), sorted(save)
 
 
