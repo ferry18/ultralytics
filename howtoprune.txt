@@ -1,0 +1,59 @@
+HOW TO RUN BASE TRAINING, PRUNE, AND FINE-TUNE
+=================================================
+
+Two ways to perform a full workflow consisting of:
+  • 100-epoch baseline training
+  • 20 % channel pruning
+  • 50-epoch fine-tune on the pruned model
+
+──────────────── 1. Use the ready-made pipeline script ────────────────
+The `run_yolo_pipeline.sh` script automates the three-step sequence.
+Pass your desired epoch counts (and any overrides) as environment variables:
+
+    BASE_EPOCHS=100  FT_EPOCHS=50  DEVICE=0  bash run_yolo_pipeline.sh
+
+Optional overrides
+    PRUNE_PERCENT=<ratio>   # default 0.20 (20 %)
+    BATCH=<size>            # default 16
+    IMGSZ=<pixels>          # default 640
+
+Example with custom settings:
+
+    BASE_EPOCHS=100 FT_EPOCHS=50 PRUNE_PERCENT=0.3 BATCH=32 DEVICE=0 \
+    bash run_yolo_pipeline.sh
+
+Outputs (under `runs/pipeline_<timestamp>/`):
+    • baseline_train.log, finetune_train.log
+    • yolov11-lcnet-pruned.pt and .yaml
+    • final_val.log, fps.log, summary.txt
+
+──────────────── 2. Run the three commands manually ──────────────────
+
+1. Baseline training (100 epochs)
+
+    yolo train \
+      model=LMWP-YOLO-main/yolov11-lcnet-mafrneck.yaml \
+      data=ultralytics/cfg/datasets/coco8-grayscale.yaml \
+      epochs=100 batch=16 imgsz=640 device=0
+
+   Note the resulting `best.pt` checkpoint, e.g. `runs/detect/train/weights/best.pt`.
+
+2. Prune 20 % of channels and export a new YAML
+
+    python prune_and_export.py \
+      --weights runs/detect/train/weights/best.pt \
+      --yaml    LMWP-YOLO-main/yolov11-lcnet-mafrneck.yaml \
+      --amount  0.20
+
+   This writes `yolov11-lcnet-pruned.pt` and `yolov11-lcnet-pruned.yaml`.
+
+3. Fine-tune the pruned model (50 epochs)
+
+    yolo train \
+      model=path/to/yolov11-lcnet-pruned.yaml \
+      data=ultralytics/cfg/datasets/coco8-grayscale.yaml \
+      epochs=50 batch=16 imgsz=640 device=0
+
+   Use `resume=True` if continuing a stopped fine-tune run.
+
+Either workflow yields a fully trained, pruned model that mirrors the LMWP-YOLO architecture described in the paper.
