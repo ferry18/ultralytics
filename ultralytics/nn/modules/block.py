@@ -1396,6 +1396,9 @@ class PSABlock(nn.Module):
         """
         super().__init__()
 
+        # Ensure a valid number of heads (must be >=1) to avoid zero-division when c < 64
+        num_heads = max(1, num_heads)
+
         self.attn = Attention(c, attn_ratio=attn_ratio, num_heads=num_heads)
         self.ffn = nn.Sequential(Conv(c, c * 2, 1), Conv(c * 2, c, 1, act=False))
         self.add = shortcut
