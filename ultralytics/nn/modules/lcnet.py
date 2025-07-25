@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from .conv import Conv, DWConv  # removed h_swish import
 
 
@@ -10,7 +11,7 @@ class h_swish(nn.Module):
         self.inplace = inplace
 
     def forward(self, x):
-        return x * torch.relu6(x + 3.0, inplace=self.inplace) / 6.0
+        return x * F.relu6(x + 3.0, inplace=self.inplace) / 6.0
 
 __all__ = ("LCNet", "lcnet_075")
 
