@@ -58,6 +58,10 @@ from ultralytics.nn.modules import (
     RepC3,
     RepConv,
     RepNCSPELAN4,
+    Select0,
+    Select1,
+    Select2,
+    Selector,
     RepVGGDW,
     ResNetLayer,
     RTDETRDecoder,
@@ -1650,6 +1654,10 @@ def parse_model(d, ch, verbose=True):
             A2C2f,
             lcnet_075,
             lcnet_075_fixed,
+            Select0,
+            Select1,
+            Select2,
+            Selector,
         }
     )
     repeat_modules = frozenset(  # modules with 'repeat' arguments

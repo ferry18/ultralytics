@@ -1,25 +1,20 @@
 # Ultralytics YOLOv11 🚀, GPL-3.0 license
-# YOLO11-seg instance segmentation model. For Usage examples see https://docs.ultralytics.com/tasks/segment
+# LMWP-YOLO: Lightweight Mamba-assisted FPN with Receptive-field Attention Neck
+# Final working version using custom selector modules
 
 # Parameters
 nc: 80  # number of classes
-scales: # model compound scaling constants, i.e. 'model=yolo11n-seg.yaml' will call yolo11-seg.yaml with scale 'n'
+scales: # model compound scaling constants
   # [depth, width, max_channels]
-  n: [0.50, 0.25, 1024]
-  s: [0.50, 0.50, 1024]
-  m: [0.50, 1.00, 512]
   l: [1.00, 1.00, 512]
-  x: [1.00, 1.50, 512]
 
-# YOLOv11.0s Lightweight Mamba-assisted FPN with Receptive-field Attention Neck
-# Using fixed channel specifications to avoid scaling issues
-
+# Architecture
 backbone:
   # [from, repeats, module, args]
   - [-1, 1, lcnet_075, [1024]]       # 0  outputs (P5, P4, P3) = (1024, 96, 48)
-  - [0, 1, Index, [0]]               # 1  P5 (1024 channels)
-  - [0, 1, Index, [1]]               # 2  P4 (96 channels)  
-  - [0, 1, Index, [2]]               # 3  P3 (48 channels)
+  - [0, 1, Select0, []]              # 1  P5 (1024 channels)
+  - [0, 1, Select1, []]              # 2  P4 (96 channels)  
+  - [0, 1, Select2, []]              # 3  P3 (48 channels)
   - [1, 1, SPPF, [512, 5]]           # 4  P5' (1024 -> 512 channels)
   - [4, 1, C2PSA, [512]]             # 5  refined P5' (512 channels)
 

@@ -1,4 +1,12 @@
-# Ultralytics YOLOv11 🚀, GPL-3.0 license
+import yaml
+
+def create_fixed_yaml():
+    """Create a fixed YAML with exact channel specifications."""
+    
+    # For scale 'l' (width=1.0), we need to ensure all channels match exactly
+    # lcnet_075 outputs: P5=1024, P4=96, P3=48
+    
+    yaml_content = """# Ultralytics YOLOv11 🚀, GPL-3.0 license
 # YOLO11-seg instance segmentation model. For Usage examples see https://docs.ultralytics.com/tasks/segment
 
 # Parameters
@@ -37,3 +45,22 @@ head:
   - [13, 1, MAFR, [64]]                          # 14 enhanced P2 (64 channels)
   
   - [[14, 11, 8], 1, Detect, [nc]]              # 15 Detect(P2, P3', P4')
+"""
+    
+    # Write the YAML file
+    with open('yolov11-lcnet-mafrneck-fixed-v2.yaml', 'w') as f:
+        f.write(yaml_content)
+    
+    print("Created: yolov11-lcnet-mafrneck-fixed-v2.yaml")
+    
+    # Also create a version with explicit scale
+    yaml_dict = yaml.safe_load(yaml_content)
+    yaml_dict['scale'] = 'l'  # Force scale to 'l'
+    
+    with open('yolov11l-lcnet-mafrneck-fixed-v2.yaml', 'w') as f:
+        yaml.dump(yaml_dict, f, default_flow_style=False, sort_keys=False)
+    
+    print("Created: yolov11l-lcnet-mafrneck-fixed-v2.yaml")
+
+if __name__ == "__main__":
+    create_fixed_yaml()

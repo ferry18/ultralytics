@@ -92,6 +92,7 @@ from .head import (
     YOLOESegment,
     v10Detect,
 )
+from .selector import Select0, Select1, Select2, Selector
 from .transformer import (
     AIFI,
     MLP,
@@ -186,4 +187,8 @@ __all__ = (
     "lcnet_075",
     "lcnet_075_fixed",
     "MAFR",
+    "Select0",
+    "Select1",
+    "Select2",
+    "Selector",
 )
