@@ -1,0 +1,36 @@
+# YOLOv11 with LCNet backbone and MAFR neck - FIXED VERSION
+
+# Parameters
+nc: 80  # number of classes
+scales:
+  n: [0.25, 0.50, 1024]
+  s: [0.50, 0.50, 1024]
+  m: [0.50, 1.00, 512]
+  l: [1.00, 1.00, 512]
+  x: [1.00, 1.50, 512]
+
+# YOLOv11 backbone with LCNet
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, lcnet_075, [3, 1024]]  # 0-P1/2, P2/4, P3/8, P4/16, P5/32  outputs: [1024, 96, 48]
+  - [-1, 1, Index, [0]]  # 1-P5  selects P5 (1024 channels)
+  - [-1, 1, Index, [1]]  # 2-P4  selects P4 (96 channels)
+  - [-1, 1, Index, [2]]  # 3-P3  selects P3 (48 channels)
+  - [1, 1, SPPF, [5]]  # 4      P5 -> P5' (1024 channels)
+  - [4, 1, C2PSA, [1024, 1]]  # 5 P5' -> P5' (1024 channels)
+
+# YOLOv11 head with MAFR
+head:
+  - [5, 1, nn.Upsample, [None, 2, "nearest"]]  # 6  P5' upsampled
+  - [[2, 6], 1, Concat, [1]]  # 7  cat P4 with upsampled P5' (96+1024=1120)
+  - [7, 1, C3k2, [512, 0.5]]  # 8  P4' (1120 -> 512 channels)
+
+  - [8, 1, nn.Upsample, [None, 2, "nearest"]]  # 9  P4' upsampled
+  - [[3, 9], 1, Concat, [1]]  # 10  cat P3 with upsampled P4' (48+512=560)
+  - [10, 1, C3k2, [256, 0.5]]  # 11  P3' (560 -> 256 channels)
+  
+  - [11, 1, nn.Upsample, [None, 2, "nearest"]]  # 12  P3' upsampled
+  - [12, 1, C3k2, [128, 0.5]]  # 13  P2 (256 -> 128 channels)
+  - [13, 1, MAFR, [128]]  # 14  P2 enhanced with MAFR (128 channels)
+
+  - [[14, 11, 8], 1, Detect, [nc]]  # 15  Detect(P2, P3', P4')
