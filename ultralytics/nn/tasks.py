@@ -1735,6 +1735,12 @@ def parse_model(d, ch, verbose=True):
             args = [c1, c2, *args[1:]]
         elif m is CBFuse:
             c2 = ch[f[-1]]
+        elif m is MAFR:
+            # MAFR expects a single `inp` argument which should equal the incoming
+            # channel count. Ignore YAML-provided value to prevent mismatches
+            # after width scaling.
+            args = [ch[f]]  # ensure inp matches previous layer's channels
+            c2 = ch[f]
         elif m in frozenset({TorchVision, Index}):
             c2 = args[0]
             c1 = ch[f]
@@ -1881,8 +1887,15 @@ def _set_out_channels(module):
     if hasattr(module, "conv") and isinstance(module.conv, torch.nn.Conv2d):
         module.out_channels = module.conv.out_channels
     # Case 2: blocks that end with a Conv named `cv2` (e.g. C3*, C2f*)
-    elif hasattr(module, "cv2") and isinstance(module.cv2, torch.nn.Conv2d):
-        module.out_channels = module.cv2.out_channels
+    # Support both raw nn.Conv2d layers and wrapped Conv modules used across Ultralytics repo.
+    elif hasattr(module, "cv2"):
+        cv2_layer = module.cv2
+        # If it's a wrapped Conv, drill down to the underlying nn.Conv2d stored in attribute `conv`.
+        if isinstance(cv2_layer, torch.nn.Module):
+            if isinstance(cv2_layer, torch.nn.Conv2d):
+                module.out_channels = cv2_layer.out_channels
+            elif hasattr(cv2_layer, "conv") and isinstance(cv2_layer.conv, torch.nn.Conv2d):
+                module.out_channels = cv2_layer.conv.out_channels
     # Fallback: search first child Conv
     elif not hasattr(module, "out_channels"):
         # Choose the *last* Conv2d encountered (closest to the module output)
