@@ -1,0 +1,910 @@
+﻿Root: ultralytics-main (7)
+|-- LMWP-YOLO
+|   |-- images
+|   |   |-- 2025_08_05_34f8389150f57116e76bg-04.jpg
+|   |   |-- 2025_08_05_34f8389150f57116e76bg-05(1).jpg
+|   |   |-- 2025_08_05_34f8389150f57116e76bg-05(1).txt
+|   |   |-- 2025_08_05_34f8389150f57116e76bg-05.jpg
+|   |   |-- 2025_08_05_34f8389150f57116e76bg-05.txt
+|   |   |-- 2025_08_05_34f8389150f57116e76bg-06.jpg
+|   |   |-- 2025_08_05_34f8389150f57116e76bg-06.txt
+|   |   |-- 2025_08_05_34f8389150f57116e76bg-07(1).jpg
+|   |   |-- 2025_08_05_34f8389150f57116e76bg-07(1).txt
+|   |   |-- 2025_08_05_34f8389150f57116e76bg-07.jpg
+|   |   |-- 2025_08_05_34f8389150f57116e76bg-07.txt
+|   |   |-- 2025_08_05_34f8389150f57116e76bg-09.jpg
+|   |   |-- 2025_08_05_34f8389150f57116e76bg-17.jpg
+|   |   |-- 2025_08_05_34f8389150f57116e76bg-17.txt
+|   |-- LMWP-YOLO-CODE
+|   |   |-- block.py
+|   |-- Area-weighted-Wasserstein-Loss.tex
+|   |-- LWMP-YOLO-RESEARCH-PAPER.tex
+|-- PP-LCNet
+|   |-- images
+|   |   |-- image1.png
+|   |   |-- image2.png
+|   |-- PP-LCNet-CODE
+|   |   |-- pplcnet.py
+|   |   |-- README.md
+|   |-- 0fb006718d3f4c62a526dfd86001f232.latex
+|-- ultralytics-main
+|   |-- .github
+|   |   |-- ISSUE_TEMPLATE
+|   |   |   |-- bug-report.yml
+|   |   |   |-- config.yml
+|   |   |   |-- feature-request.yml
+|   |   |   |-- question.yml
+|   |   |-- workflows
+|   |   |   |-- ci.yml
+|   |   |   |-- cla.yml
+|   |   |   |-- docker.yml
+|   |   |   |-- docs.yml
+|   |   |   |-- format.yml
+|   |   |   |-- links.yml
+|   |   |   |-- merge-main-into-prs.yml
+|   |   |   |-- mirror.yml
+|   |   |   |-- publish.yml
+|   |   |   |-- stale.yml
+|   |   |-- dependabot.yml
+|   |-- docker
+|   |   |-- Dockerfile
+|   |   |-- Dockerfile-arm64
+|   |   |-- Dockerfile-conda
+|   |   |-- Dockerfile-cpu
+|   |   |-- Dockerfile-jetson-jetpack4
+|   |   |-- Dockerfile-jetson-jetpack5
+|   |   |-- Dockerfile-jetson-jetpack6
+|   |   |-- Dockerfile-jupyter
+|   |   |-- Dockerfile-python
+|   |   |-- Dockerfile-runner
+|   |-- docs
+|   |   |-- en
+|   |   |   |-- datasets
+|   |   |   |   |-- classify
+|   |   |   |   |   |-- caltech101.md
+|   |   |   |   |   |-- caltech256.md
+|   |   |   |   |   |-- cifar10.md
+|   |   |   |   |   |-- cifar100.md
+|   |   |   |   |   |-- fashion-mnist.md
+|   |   |   |   |   |-- imagenet.md
+|   |   |   |   |   |-- imagenet10.md
+|   |   |   |   |   |-- imagenette.md
+|   |   |   |   |   |-- imagewoof.md
+|   |   |   |   |   |-- index.md
+|   |   |   |   |   |-- mnist.md
+|   |   |   |   |-- detect
+|   |   |   |   |   |-- african-wildlife.md
+|   |   |   |   |   |-- argoverse.md
+|   |   |   |   |   |-- brain-tumor.md
+|   |   |   |   |   |-- coco.md
+|   |   |   |   |   |-- coco128.md
+|   |   |   |   |   |-- coco8.md
+|   |   |   |   |   |-- coco8-grayscale.md
+|   |   |   |   |   |-- coco8-multispectral.md
+|   |   |   |   |   |-- globalwheat2020.md
+|   |   |   |   |   |-- homeobjects-3k.md
+|   |   |   |   |   |-- index.md
+|   |   |   |   |   |-- lvis.md
+|   |   |   |   |   |-- medical-pills.md
+|   |   |   |   |   |-- objects365.md
+|   |   |   |   |   |-- open-images-v7.md
+|   |   |   |   |   |-- roboflow-100.md
+|   |   |   |   |   |-- signature.md
+|   |   |   |   |   |-- sku-110k.md
+|   |   |   |   |   |-- visdrone.md
+|   |   |   |   |   |-- voc.md
+|   |   |   |   |   |-- xview.md
+|   |   |   |   |-- explorer
+|   |   |   |   |   |-- api.md
+|   |   |   |   |   |-- dashboard.md
+|   |   |   |   |   |-- explorer.md
+|   |   |   |   |   |-- index.md
+|   |   |   |   |-- obb
+|   |   |   |   |   |-- dota8.md
+|   |   |   |   |   |-- dota-v2.md
+|   |   |   |   |   |-- index.md
+|   |   |   |   |-- pose
+|   |   |   |   |   |-- coco.md
+|   |   |   |   |   |-- coco8-pose.md
+|   |   |   |   |   |-- dog-pose.md
+|   |   |   |   |   |-- hand-keypoints.md
+|   |   |   |   |   |-- index.md
+|   |   |   |   |   |-- tiger-pose.md
+|   |   |   |   |-- segment
+|   |   |   |   |   |-- carparts-seg.md
+|   |   |   |   |   |-- coco.md
+|   |   |   |   |   |-- coco8-seg.md
+|   |   |   |   |   |-- crack-seg.md
+|   |   |   |   |   |-- index.md
+|   |   |   |   |   |-- package-seg.md
+|   |   |   |   |-- track
+|   |   |   |   |   |-- index.md
+|   |   |   |   |-- index.md
+|   |   |   |-- guides
+|   |   |   |   |-- analytics.md
+|   |   |   |   |-- azureml-quickstart.md
+|   |   |   |   |-- conda-quickstart.md
+|   |   |   |   |-- coral-edge-tpu-on-raspberry-pi.md
+|   |   |   |   |-- data-collection-and-annotation.md
+|   |   |   |   |-- deepstream-nvidia-jetson.md
+|   |   |   |   |-- defining-project-goals.md
+|   |   |   |   |-- distance-calculation.md
+|   |   |   |   |-- docker-quickstart.md
+|   |   |   |   |-- heatmaps.md
+|   |   |   |   |-- hyperparameter-tuning.md
+|   |   |   |   |-- index.md
+|   |   |   |   |-- instance-segmentation-and-tracking.md
+|   |   |   |   |-- isolating-segmentation-objects.md
+|   |   |   |   |-- kfold-cross-validation.md
+|   |   |   |   |-- model-deployment-options.md
+|   |   |   |   |-- model-deployment-practices.md
+|   |   |   |   |-- model-evaluation-insights.md
+|   |   |   |   |-- model-monitoring-and-maintenance.md
+|   |   |   |   |-- model-testing.md
+|   |   |   |   |-- model-training-tips.md
+|   |   |   |   |-- nvidia-jetson.md
+|   |   |   |   |-- object-blurring.md
+|   |   |   |   |-- object-counting.md
+|   |   |   |   |-- object-cropping.md
+|   |   |   |   |-- optimizing-openvino-latency-vs-throughput-modes.md
+|   |   |   |   |-- parking-management.md
+|   |   |   |   |-- preprocessing_annotated_data.md
+|   |   |   |   |-- queue-management.md
+|   |   |   |   |-- raspberry-pi.md
+|   |   |   |   |-- region-counting.md
+|   |   |   |   |-- ros-quickstart.md
+|   |   |   |   |-- sahi-tiled-inference.md
+|   |   |   |   |-- security-alarm-system.md
+|   |   |   |   |-- similarity-search.md
+|   |   |   |   |-- speed-estimation.md
+|   |   |   |   |-- steps-of-a-cv-project.md
+|   |   |   |   |-- streamlit-live-inference.md
+|   |   |   |   |-- trackzone.md
+|   |   |   |   |-- triton-inference-server.md
+|   |   |   |   |-- vertex-ai-deployment-with-docker.md
+|   |   |   |   |-- view-results-in-terminal.md
+|   |   |   |   |-- vision-eye.md
+|   |   |   |   |-- workouts-monitoring.md
+|   |   |   |   |-- yolo-common-issues.md
+|   |   |   |   |-- yolo-data-augmentation.md
+|   |   |   |   |-- yolo-performance-metrics.md
+|   |   |   |   |-- yolo-thread-safe-inference.md
+|   |   |   |-- help
+|   |   |   |   |-- CI.md
+|   |   |   |   |-- CLA.md
+|   |   |   |   |-- code-of-conduct.md
+|   |   |   |   |-- contributing.md
+|   |   |   |   |-- environmental-health-safety.md
+|   |   |   |   |-- FAQ.md
+|   |   |   |   |-- index.md
+|   |   |   |   |-- minimum-reproducible-example.md
+|   |   |   |   |-- privacy.md
+|   |   |   |   |-- security.md
+|   |   |   |-- hub
+|   |   |   |   |-- api
+|   |   |   |   |   |-- index.md
+|   |   |   |   |-- app
+|   |   |   |   |   |-- android.md
+|   |   |   |   |   |-- index.md
+|   |   |   |   |   |-- ios.md
+|   |   |   |   |-- cloud-training.md
+|   |   |   |   |-- datasets.md
+|   |   |   |   |-- index.md
+|   |   |   |   |-- inference-api.md
+|   |   |   |   |-- integrations.md
+|   |   |   |   |-- models.md
+|   |   |   |   |-- pro.md
+|   |   |   |   |-- projects.md
+|   |   |   |   |-- quickstart.md
+|   |   |   |   |-- teams.md
+|   |   |   |-- integrations
+|   |   |   |   |-- albumentations.md
+|   |   |   |   |-- amazon-sagemaker.md
+|   |   |   |   |-- clearml.md
+|   |   |   |   |-- comet.md
+|   |   |   |   |-- coreml.md
+|   |   |   |   |-- dvc.md
+|   |   |   |   |-- edge-tpu.md
+|   |   |   |   |-- google-colab.md
+|   |   |   |   |-- gradio.md
+|   |   |   |   |-- ibm-watsonx.md
+|   |   |   |   |-- index.md
+|   |   |   |   |-- jupyterlab.md
+|   |   |   |   |-- kaggle.md
+|   |   |   |   |-- mlflow.md
+|   |   |   |   |-- mnn.md
+|   |   |   |   |-- ncnn.md
+|   |   |   |   |-- neural-magic.md
+|   |   |   |   |-- onnx.md
+|   |   |   |   |-- openvino.md
+|   |   |   |   |-- paddlepaddle.md
+|   |   |   |   |-- paperspace.md
+|   |   |   |   |-- ray-tune.md
+|   |   |   |   |-- roboflow.md
+|   |   |   |   |-- rockchip-rknn.md
+|   |   |   |   |-- seeedstudio-recamera.md
+|   |   |   |   |-- sony-imx500.md
+|   |   |   |   |-- tensorboard.md
+|   |   |   |   |-- tensorrt.md
+|   |   |   |   |-- tf-graphdef.md
+|   |   |   |   |-- tfjs.md
+|   |   |   |   |-- tflite.md
+|   |   |   |   |-- tf-savedmodel.md
+|   |   |   |   |-- torchscript.md
+|   |   |   |   |-- vscode.md
+|   |   |   |   |-- weights-biases.md
+|   |   |   |-- macros
+|   |   |   |   |-- augmentation-args.md
+|   |   |   |   |-- export-args.md
+|   |   |   |   |-- export-table.md
+|   |   |   |   |-- predict-args.md
+|   |   |   |   |-- sam-auto-annotate.md
+|   |   |   |   |-- solutions-args.md
+|   |   |   |   |-- track-args.md
+|   |   |   |   |-- train-args.md
+|   |   |   |   |-- validation-args.md
+|   |   |   |   |-- visualization-args.md
+|   |   |   |   |-- yolo-cls-perf.md
+|   |   |   |   |-- yolo-det-perf.md
+|   |   |   |   |-- yolo-obb-perf.md
+|   |   |   |   |-- yolo-pose-perf.md
+|   |   |   |   |-- yolo-seg-perf.md
+|   |   |   |-- models
+|   |   |   |   |-- fast-sam.md
+|   |   |   |   |-- index.md
+|   |   |   |   |-- mobile-sam.md
+|   |   |   |   |-- rtdetr.md
+|   |   |   |   |-- sam.md
+|   |   |   |   |-- sam-2.md
+|   |   |   |   |-- yolo11.md
+|   |   |   |   |-- yolo12.md
+|   |   |   |   |-- yoloe.md
+|   |   |   |   |-- yolo-nas.md
+|   |   |   |   |-- yolov10.md
+|   |   |   |   |-- yolov3.md
+|   |   |   |   |-- yolov4.md
+|   |   |   |   |-- yolov5.md
+|   |   |   |   |-- yolov6.md
+|   |   |   |   |-- yolov7.md
+|   |   |   |   |-- yolov8.md
+|   |   |   |   |-- yolov9.md
+|   |   |   |   |-- yolo-world.md
+|   |   |   |-- modes
+|   |   |   |   |-- benchmark.md
+|   |   |   |   |-- export.md
+|   |   |   |   |-- index.md
+|   |   |   |   |-- predict.md
+|   |   |   |   |-- track.md
+|   |   |   |   |-- train.md
+|   |   |   |   |-- val.md
+|   |   |   |-- reference
+|   |   |   |   |-- cfg
+|   |   |   |   |   |-- __init__.md
+|   |   |   |   |-- data
+|   |   |   |   |   |-- annotator.md
+|   |   |   |   |   |-- augment.md
+|   |   |   |   |   |-- base.md
+|   |   |   |   |   |-- build.md
+|   |   |   |   |   |-- converter.md
+|   |   |   |   |   |-- dataset.md
+|   |   |   |   |   |-- loaders.md
+|   |   |   |   |   |-- split.md
+|   |   |   |   |   |-- split_dota.md
+|   |   |   |   |   |-- utils.md
+|   |   |   |   |-- engine
+|   |   |   |   |   |-- exporter.md
+|   |   |   |   |   |-- model.md
+|   |   |   |   |   |-- predictor.md
+|   |   |   |   |   |-- results.md
+|   |   |   |   |   |-- trainer.md
+|   |   |   |   |   |-- tuner.md
+|   |   |   |   |   |-- validator.md
+|   |   |   |   |-- hub
+|   |   |   |   |   |-- google
+|   |   |   |   |   |   |-- __init__.md
+|   |   |   |   |   |-- __init__.md
+|   |   |   |   |   |-- auth.md
+|   |   |   |   |   |-- session.md
+|   |   |   |   |   |-- utils.md
+|   |   |   |   |-- models
+|   |   |   |   |   |-- fastsam
+|   |   |   |   |   |   |-- model.md
+|   |   |   |   |   |   |-- predict.md
+|   |   |   |   |   |   |-- utils.md
+|   |   |   |   |   |   |-- val.md
+|   |   |   |   |   |-- nas
+|   |   |   |   |   |   |-- model.md
+|   |   |   |   |   |   |-- predict.md
+|   |   |   |   |   |   |-- val.md
+|   |   |   |   |   |-- rtdetr
+|   |   |   |   |   |   |-- model.md
+|   |   |   |   |   |   |-- predict.md
+|   |   |   |   |   |   |-- train.md
+|   |   |   |   |   |   |-- val.md
+|   |   |   |   |   |-- sam
+|   |   |   |   |   |   |-- modules
+|   |   |   |   |   |   |   |-- blocks.md
+|   |   |   |   |   |   |   |-- decoders.md
+|   |   |   |   |   |   |   |-- encoders.md
+|   |   |   |   |   |   |   |-- memory_attention.md
+|   |   |   |   |   |   |   |-- sam.md
+|   |   |   |   |   |   |   |-- tiny_encoder.md
+|   |   |   |   |   |   |   |-- transformer.md
+|   |   |   |   |   |   |   |-- utils.md
+|   |   |   |   |   |   |-- amg.md
+|   |   |   |   |   |   |-- build.md
+|   |   |   |   |   |   |-- model.md
+|   |   |   |   |   |   |-- predict.md
+|   |   |   |   |   |-- utils
+|   |   |   |   |   |   |-- loss.md
+|   |   |   |   |   |   |-- ops.md
+|   |   |   |   |   |-- yolo
+|   |   |   |   |   |   |-- classify
+|   |   |   |   |   |   |   |-- predict.md
+|   |   |   |   |   |   |   |-- train.md
+|   |   |   |   |   |   |   |-- val.md
+|   |   |   |   |   |   |-- detect
+|   |   |   |   |   |   |   |-- predict.md
+|   |   |   |   |   |   |   |-- train.md
+|   |   |   |   |   |   |   |-- val.md
+|   |   |   |   |   |   |-- obb
+|   |   |   |   |   |   |   |-- predict.md
+|   |   |   |   |   |   |   |-- train.md
+|   |   |   |   |   |   |   |-- val.md
+|   |   |   |   |   |   |-- pose
+|   |   |   |   |   |   |   |-- predict.md
+|   |   |   |   |   |   |   |-- train.md
+|   |   |   |   |   |   |   |-- val.md
+|   |   |   |   |   |   |-- segment
+|   |   |   |   |   |   |   |-- predict.md
+|   |   |   |   |   |   |   |-- train.md
+|   |   |   |   |   |   |   |-- val.md
+|   |   |   |   |   |   |-- world
+|   |   |   |   |   |   |   |-- train.md
+|   |   |   |   |   |   |   |-- train_world.md
+|   |   |   |   |   |   |-- yoloe
+|   |   |   |   |   |   |   |-- predict.md
+|   |   |   |   |   |   |   |-- train.md
+|   |   |   |   |   |   |   |-- train_seg.md
+|   |   |   |   |   |   |   |-- val.md
+|   |   |   |   |   |   |-- model.md
+|   |   |   |   |-- nn
+|   |   |   |   |   |-- modules
+|   |   |   |   |   |   |-- activation.md
+|   |   |   |   |   |   |-- block.md
+|   |   |   |   |   |   |-- conv.md
+|   |   |   |   |   |   |-- head.md
+|   |   |   |   |   |   |-- transformer.md
+|   |   |   |   |   |   |-- utils.md
+|   |   |   |   |   |-- autobackend.md
+|   |   |   |   |   |-- tasks.md
+|   |   |   |   |   |-- text_model.md
+|   |   |   |   |-- solutions
+|   |   |   |   |   |-- ai_gym.md
+|   |   |   |   |   |-- analytics.md
+|   |   |   |   |   |-- config.md
+|   |   |   |   |   |-- distance_calculation.md
+|   |   |   |   |   |-- heatmap.md
+|   |   |   |   |   |-- instance_segmentation.md
+|   |   |   |   |   |-- object_blurrer.md
+|   |   |   |   |   |-- object_counter.md
+|   |   |   |   |   |-- object_cropper.md
+|   |   |   |   |   |-- parking_management.md
+|   |   |   |   |   |-- queue_management.md
+|   |   |   |   |   |-- region_counter.md
+|   |   |   |   |   |-- security_alarm.md
+|   |   |   |   |   |-- similarity_search.md
+|   |   |   |   |   |-- solutions.md
+|   |   |   |   |   |-- speed_estimation.md
+|   |   |   |   |   |-- streamlit_inference.md
+|   |   |   |   |   |-- trackzone.md
+|   |   |   |   |   |-- vision_eye.md
+|   |   |   |   |-- trackers
+|   |   |   |   |   |-- utils
+|   |   |   |   |   |   |-- gmc.md
+|   |   |   |   |   |   |-- kalman_filter.md
+|   |   |   |   |   |   |-- matching.md
+|   |   |   |   |   |-- basetrack.md
+|   |   |   |   |   |-- bot_sort.md
+|   |   |   |   |   |-- byte_tracker.md
+|   |   |   |   |   |-- track.md
+|   |   |   |   |-- utils
+|   |   |   |   |   |-- callbacks
+|   |   |   |   |   |   |-- base.md
+|   |   |   |   |   |   |-- clearml.md
+|   |   |   |   |   |   |-- comet.md
+|   |   |   |   |   |   |-- dvc.md
+|   |   |   |   |   |   |-- hub.md
+|   |   |   |   |   |   |-- mlflow.md
+|   |   |   |   |   |   |-- neptune.md
+|   |   |   |   |   |   |-- raytune.md
+|   |   |   |   |   |   |-- tensorboard.md
+|   |   |   |   |   |   |-- wb.md
+|   |   |   |   |   |-- __init__.md
+|   |   |   |   |   |-- autobatch.md
+|   |   |   |   |   |-- autodevice.md
+|   |   |   |   |   |-- benchmarks.md
+|   |   |   |   |   |-- checks.md
+|   |   |   |   |   |-- dist.md
+|   |   |   |   |   |-- downloads.md
+|   |   |   |   |   |-- errors.md
+|   |   |   |   |   |-- export.md
+|   |   |   |   |   |-- files.md
+|   |   |   |   |   |-- instance.md
+|   |   |   |   |   |-- loss.md
+|   |   |   |   |   |-- metrics.md
+|   |   |   |   |   |-- ops.md
+|   |   |   |   |   |-- patches.md
+|   |   |   |   |   |-- plotting.md
+|   |   |   |   |   |-- tal.md
+|   |   |   |   |   |-- torch_utils.md
+|   |   |   |   |   |-- triton.md
+|   |   |   |   |   |-- tuner.md
+|   |   |   |-- solutions
+|   |   |   |   |-- index.md
+|   |   |   |-- tasks
+|   |   |   |   |-- classify.md
+|   |   |   |   |-- detect.md
+|   |   |   |   |-- index.md
+|   |   |   |   |-- obb.md
+|   |   |   |   |-- pose.md
+|   |   |   |   |-- segment.md
+|   |   |   |-- usage
+|   |   |   |   |-- callbacks.md
+|   |   |   |   |-- cfg.md
+|   |   |   |   |-- cli.md
+|   |   |   |   |-- engine.md
+|   |   |   |   |-- python.md
+|   |   |   |   |-- simple-utilities.md
+|   |   |   |-- yolov5
+|   |   |   |   |-- environments
+|   |   |   |   |   |-- aws_quickstart_tutorial.md
+|   |   |   |   |   |-- azureml_quickstart_tutorial.md
+|   |   |   |   |   |-- docker_image_quickstart_tutorial.md
+|   |   |   |   |   |-- google_cloud_quickstart_tutorial.md
+|   |   |   |   |-- tutorials
+|   |   |   |   |   |-- architecture_description.md
+|   |   |   |   |   |-- clearml_logging_integration.md
+|   |   |   |   |   |-- comet_logging_integration.md
+|   |   |   |   |   |-- hyperparameter_evolution.md
+|   |   |   |   |   |-- model_ensembling.md
+|   |   |   |   |   |-- model_export.md
+|   |   |   |   |   |-- model_pruning_and_sparsity.md
+|   |   |   |   |   |-- multi_gpu_training.md
+|   |   |   |   |   |-- neural_magic_pruning_quantization.md
+|   |   |   |   |   |-- pytorch_hub_model_loading.md
+|   |   |   |   |   |-- test_time_augmentation.md
+|   |   |   |   |   |-- tips_for_best_training_results.md
+|   |   |   |   |   |-- train_custom_data.md
+|   |   |   |   |   |-- transfer_learning_with_frozen_layers.md
+|   |   |   |   |-- index.md
+|   |   |   |   |-- quickstart_tutorial.md
+|   |   |   |-- CNAME
+|   |   |   |-- index.md
+|   |   |   |-- quickstart.md
+|   |   |   |-- robots.txt
+|   |   |-- overrides
+|   |   |   |-- javascript
+|   |   |   |   |-- benchmark.js
+|   |   |   |   |-- chart-widget.js
+|   |   |   |   |-- extra.js
+|   |   |   |   |-- giscus.js
+|   |   |   |   |-- tablesort.js
+|   |   |   |-- partials
+|   |   |   |   |-- comments.html
+|   |   |   |-- stylesheets
+|   |   |   |   |-- style.css
+|   |   |   |-- main.html
+|   |   |-- build_docs.py
+|   |   |-- build_reference.py
+|   |   |-- coming_soon_template.md
+|   |   |-- mkdocs_github_authors.yaml
+|   |   |-- model_data.py
+|   |   |-- README.md
+|   |-- examples
+|   |   |-- RTDETR-ONNXRuntime-Python
+|   |   |   |-- main.py
+|   |   |   |-- README.md
+|   |   |   |-- requirements.txt
+|   |   |-- YOLO11-Triton-CPP
+|   |   |   |-- CMakeLists.txt
+|   |   |   |-- inference.cpp
+|   |   |   |-- inference.hpp
+|   |   |   |-- main.cpp
+|   |   |   |-- README.md
+|   |   |-- YOLO-Interactive-Tracking-UI
+|   |   |   |-- interactive_tracker.py
+|   |   |   |-- README.md
+|   |   |-- YOLO-Series-ONNXRuntime-Rust
+|   |   |   |-- src
+|   |   |   |   |-- main.rs
+|   |   |   |-- Cargo.toml
+|   |   |   |-- README.md
+|   |   |-- YOLOv8-Action-Recognition
+|   |   |   |-- action_recognition.py
+|   |   |   |-- README.md
+|   |   |   |-- requirements.txt
+|   |   |-- YOLOv8-CPP-Inference
+|   |   |   |-- CMakeLists.txt
+|   |   |   |-- inference.cpp
+|   |   |   |-- inference.h
+|   |   |   |-- main.cpp
+|   |   |   |-- README.md
+|   |   |-- YOLOv8-LibTorch-CPP-Inference
+|   |   |   |-- CMakeLists.txt
+|   |   |   |-- main.cc
+|   |   |   |-- README.md
+|   |   |-- YOLOv8-MNN-CPP
+|   |   |   |-- CMakeLists.txt
+|   |   |   |-- main.cpp
+|   |   |   |-- main_interpreter.cpp
+|   |   |   |-- README.md
+|   |   |-- YOLOv8-ONNXRuntime
+|   |   |   |-- main.py
+|   |   |   |-- README.md
+|   |   |-- YOLOv8-ONNXRuntime-CPP
+|   |   |   |-- CMakeLists.txt
+|   |   |   |-- inference.cpp
+|   |   |   |-- inference.h
+|   |   |   |-- main.cpp
+|   |   |   |-- README.md
+|   |   |-- YOLOv8-ONNXRuntime-Rust
+|   |   |   |-- src
+|   |   |   |   |-- cli.rs
+|   |   |   |   |-- lib.rs
+|   |   |   |   |-- main.rs
+|   |   |   |   |-- model.rs
+|   |   |   |   |-- ort_backend.rs
+|   |   |   |   |-- yolo_result.rs
+|   |   |   |-- Cargo.toml
+|   |   |   |-- README.md
+|   |   |-- YOLOv8-OpenCV-ONNX-Python
+|   |   |   |-- main.py
+|   |   |   |-- README.md
+|   |   |-- YOLOv8-OpenVINO-CPP-Inference
+|   |   |   |-- CMakeLists.txt
+|   |   |   |-- inference.cc
+|   |   |   |-- inference.h
+|   |   |   |-- main.cc
+|   |   |   |-- README.md
+|   |   |-- YOLOv8-Region-Counter
+|   |   |   |-- README.md
+|   |   |   |-- yolov8_region_counter.py
+|   |   |-- YOLOv8-SAHI-Inference-Video
+|   |   |   |-- README.md
+|   |   |   |-- yolov8_sahi.py
+|   |   |-- YOLOv8-Segmentation-ONNXRuntime-Python
+|   |   |   |-- main.py
+|   |   |   |-- README.md
+|   |   |-- YOLOv8-TFLite-Python
+|   |   |   |-- main.py
+|   |   |   |-- README.md
+|   |   |-- heatmaps.ipynb
+|   |   |-- hub.ipynb
+|   |   |-- object_counting.ipynb
+|   |   |-- object_tracking.ipynb
+|   |   |-- README.md
+|   |   |-- tutorial.ipynb
+|   |-- tests
+|   |   |-- __init__.py
+|   |   |-- conftest.py
+|   |   |-- test_cli.py
+|   |   |-- test_cuda.py
+|   |   |-- test_engine.py
+|   |   |-- test_exports.py
+|   |   |-- test_integrations.py
+|   |   |-- test_python.py
+|   |   |-- test_solutions.py
+|   |-- ultralytics
+|   |   |-- assets
+|   |   |   |-- bus.jpg
+|   |   |   |-- zidane.jpg
+|   |   |-- cfg
+|   |   |   |-- datasets
+|   |   |   |   |-- african-wildlife.yaml
+|   |   |   |   |-- Argoverse.yaml
+|   |   |   |   |-- brain-tumor.yaml
+|   |   |   |   |-- carparts-seg.yaml
+|   |   |   |   |-- coco.yaml
+|   |   |   |   |-- coco128.yaml
+|   |   |   |   |-- coco128-seg.yaml
+|   |   |   |   |-- coco8.yaml
+|   |   |   |   |-- coco8-grayscale.yaml
+|   |   |   |   |-- coco8-multispectral.yaml
+|   |   |   |   |-- coco8-pose.yaml
+|   |   |   |   |-- coco8-seg.yaml
+|   |   |   |   |-- coco-pose.yaml
+|   |   |   |   |-- crack-seg.yaml
+|   |   |   |   |-- dog-pose.yaml
+|   |   |   |   |-- dota8.yaml
+|   |   |   |   |-- dota8-multispectral.yaml
+|   |   |   |   |-- DOTAv1.5.yaml
+|   |   |   |   |-- DOTAv1.yaml
+|   |   |   |   |-- GlobalWheat2020.yaml
+|   |   |   |   |-- hand-keypoints.yaml
+|   |   |   |   |-- HomeObjects-3K.yaml
+|   |   |   |   |-- ImageNet.yaml
+|   |   |   |   |-- lvis.yaml
+|   |   |   |   |-- medical-pills.yaml
+|   |   |   |   |-- Objects365.yaml
+|   |   |   |   |-- open-images-v7.yaml
+|   |   |   |   |-- package-seg.yaml
+|   |   |   |   |-- signature.yaml
+|   |   |   |   |-- SKU-110K.yaml
+|   |   |   |   |-- tiger-pose.yaml
+|   |   |   |   |-- VisDrone.yaml
+|   |   |   |   |-- VOC.yaml
+|   |   |   |   |-- xView.yaml
+|   |   |   |-- models
+|   |   |   |   |-- 11
+|   |   |   |   |   |-- yolo11.yaml
+|   |   |   |   |   |-- yolo11-cls.yaml
+|   |   |   |   |   |-- yolo11-cls-resnet18.yaml
+|   |   |   |   |   |-- yolo11-obb.yaml
+|   |   |   |   |   |-- yolo11-pose.yaml
+|   |   |   |   |   |-- yolo11-seg.yaml
+|   |   |   |   |   |-- yoloe-11.yaml
+|   |   |   |   |   |-- yoloe-11-seg.yaml
+|   |   |   |   |-- 12
+|   |   |   |   |   |-- yolo12.yaml
+|   |   |   |   |   |-- yolo12-cls.yaml
+|   |   |   |   |   |-- yolo12-obb.yaml
+|   |   |   |   |   |-- yolo12-pose.yaml
+|   |   |   |   |   |-- yolo12-seg.yaml
+|   |   |   |   |-- rt-detr
+|   |   |   |   |   |-- rtdetr-l.yaml
+|   |   |   |   |   |-- rtdetr-resnet101.yaml
+|   |   |   |   |   |-- rtdetr-resnet50.yaml
+|   |   |   |   |   |-- rtdetr-x.yaml
+|   |   |   |   |-- v10
+|   |   |   |   |   |-- yolov10b.yaml
+|   |   |   |   |   |-- yolov10l.yaml
+|   |   |   |   |   |-- yolov10m.yaml
+|   |   |   |   |   |-- yolov10n.yaml
+|   |   |   |   |   |-- yolov10s.yaml
+|   |   |   |   |   |-- yolov10x.yaml
+|   |   |   |   |-- v3
+|   |   |   |   |   |-- yolov3.yaml
+|   |   |   |   |   |-- yolov3-spp.yaml
+|   |   |   |   |   |-- yolov3-tiny.yaml
+|   |   |   |   |-- v5
+|   |   |   |   |   |-- yolov5.yaml
+|   |   |   |   |   |-- yolov5-p6.yaml
+|   |   |   |   |-- v6
+|   |   |   |   |   |-- yolov6.yaml
+|   |   |   |   |-- v8
+|   |   |   |   |   |-- yoloe-v8.yaml
+|   |   |   |   |   |-- yoloe-v8-seg.yaml
+|   |   |   |   |   |-- yolov8.yaml
+|   |   |   |   |   |-- yolov8-cls.yaml
+|   |   |   |   |   |-- yolov8-cls-resnet101.yaml
+|   |   |   |   |   |-- yolov8-cls-resnet50.yaml
+|   |   |   |   |   |-- yolov8-ghost.yaml
+|   |   |   |   |   |-- yolov8-ghost-p2.yaml
+|   |   |   |   |   |-- yolov8-ghost-p6.yaml
+|   |   |   |   |   |-- yolov8-obb.yaml
+|   |   |   |   |   |-- yolov8-p2.yaml
+|   |   |   |   |   |-- yolov8-p6.yaml
+|   |   |   |   |   |-- yolov8-pose.yaml
+|   |   |   |   |   |-- yolov8-pose-p6.yaml
+|   |   |   |   |   |-- yolov8-rtdetr.yaml
+|   |   |   |   |   |-- yolov8-seg.yaml
+|   |   |   |   |   |-- yolov8-seg-p6.yaml
+|   |   |   |   |   |-- yolov8-world.yaml
+|   |   |   |   |   |-- yolov8-worldv2.yaml
+|   |   |   |   |-- v9
+|   |   |   |   |   |-- yolov9c.yaml
+|   |   |   |   |   |-- yolov9c-seg.yaml
+|   |   |   |   |   |-- yolov9e.yaml
+|   |   |   |   |   |-- yolov9e-seg.yaml
+|   |   |   |   |   |-- yolov9m.yaml
+|   |   |   |   |   |-- yolov9s.yaml
+|   |   |   |   |   |-- yolov9t.yaml
+|   |   |   |   |-- README.md
+|   |   |   |-- trackers
+|   |   |   |   |-- botsort.yaml
+|   |   |   |   |-- bytetrack.yaml
+|   |   |   |-- __init__.py
+|   |   |   |-- default.yaml
+|   |   |-- data
+|   |   |   |-- scripts
+|   |   |   |   |-- download_weights.sh
+|   |   |   |   |-- get_coco.sh
+|   |   |   |   |-- get_coco128.sh
+|   |   |   |   |-- get_imagenet.sh
+|   |   |   |-- __init__.py
+|   |   |   |-- annotator.py
+|   |   |   |-- augment.py
+|   |   |   |-- base.py
+|   |   |   |-- build.py
+|   |   |   |-- converter.py
+|   |   |   |-- dataset.py
+|   |   |   |-- loaders.py
+|   |   |   |-- split.py
+|   |   |   |-- split_dota.py
+|   |   |   |-- utils.py
+|   |   |-- engine
+|   |   |   |-- __init__.py
+|   |   |   |-- exporter.py
+|   |   |   |-- model.py
+|   |   |   |-- predictor.py
+|   |   |   |-- results.py
+|   |   |   |-- trainer.py
+|   |   |   |-- tuner.py
+|   |   |   |-- validator.py
+|   |   |-- hub
+|   |   |   |-- google
+|   |   |   |   |-- __init__.py
+|   |   |   |-- __init__.py
+|   |   |   |-- auth.py
+|   |   |   |-- session.py
+|   |   |   |-- utils.py
+|   |   |-- models
+|   |   |   |-- fastsam
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- model.py
+|   |   |   |   |-- predict.py
+|   |   |   |   |-- utils.py
+|   |   |   |   |-- val.py
+|   |   |   |-- nas
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- model.py
+|   |   |   |   |-- predict.py
+|   |   |   |   |-- val.py
+|   |   |   |-- rtdetr
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- model.py
+|   |   |   |   |-- predict.py
+|   |   |   |   |-- train.py
+|   |   |   |   |-- val.py
+|   |   |   |-- sam
+|   |   |   |   |-- modules
+|   |   |   |   |   |-- __init__.py
+|   |   |   |   |   |-- blocks.py
+|   |   |   |   |   |-- decoders.py
+|   |   |   |   |   |-- encoders.py
+|   |   |   |   |   |-- memory_attention.py
+|   |   |   |   |   |-- sam.py
+|   |   |   |   |   |-- tiny_encoder.py
+|   |   |   |   |   |-- transformer.py
+|   |   |   |   |   |-- utils.py
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- amg.py
+|   |   |   |   |-- build.py
+|   |   |   |   |-- model.py
+|   |   |   |   |-- predict.py
+|   |   |   |-- utils
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- loss.py
+|   |   |   |   |-- ops.py
+|   |   |   |-- yolo
+|   |   |   |   |-- classify
+|   |   |   |   |   |-- __init__.py
+|   |   |   |   |   |-- predict.py
+|   |   |   |   |   |-- train.py
+|   |   |   |   |   |-- val.py
+|   |   |   |   |-- detect
+|   |   |   |   |   |-- __init__.py
+|   |   |   |   |   |-- predict.py
+|   |   |   |   |   |-- train.py
+|   |   |   |   |   |-- val.py
+|   |   |   |   |-- obb
+|   |   |   |   |   |-- __init__.py
+|   |   |   |   |   |-- predict.py
+|   |   |   |   |   |-- train.py
+|   |   |   |   |   |-- val.py
+|   |   |   |   |-- pose
+|   |   |   |   |   |-- __init__.py
+|   |   |   |   |   |-- predict.py
+|   |   |   |   |   |-- train.py
+|   |   |   |   |   |-- val.py
+|   |   |   |   |-- segment
+|   |   |   |   |   |-- __init__.py
+|   |   |   |   |   |-- predict.py
+|   |   |   |   |   |-- train.py
+|   |   |   |   |   |-- val.py
+|   |   |   |   |-- world
+|   |   |   |   |   |-- __init__.py
+|   |   |   |   |   |-- train.py
+|   |   |   |   |   |-- train_world.py
+|   |   |   |   |-- yoloe
+|   |   |   |   |   |-- __init__.py
+|   |   |   |   |   |-- predict.py
+|   |   |   |   |   |-- train.py
+|   |   |   |   |   |-- train_seg.py
+|   |   |   |   |   |-- val.py
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- model.py
+|   |   |   |-- __init__.py
+|   |   |-- nn
+|   |   |   |-- modules
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- activation.py
+|   |   |   |   |-- block.py
+|   |   |   |   |-- conv.py
+|   |   |   |   |-- head.py
+|   |   |   |   |-- transformer.py
+|   |   |   |   |-- utils.py
+|   |   |   |-- __init__.py
+|   |   |   |-- autobackend.py
+|   |   |   |-- tasks.py
+|   |   |   |-- text_model.py
+|   |   |-- solutions
+|   |   |   |-- templates
+|   |   |   |   |-- similarity-search.html
+|   |   |   |-- __init__.py
+|   |   |   |-- ai_gym.py
+|   |   |   |-- analytics.py
+|   |   |   |-- config.py
+|   |   |   |-- distance_calculation.py
+|   |   |   |-- heatmap.py
+|   |   |   |-- instance_segmentation.py
+|   |   |   |-- object_blurrer.py
+|   |   |   |-- object_counter.py
+|   |   |   |-- object_cropper.py
+|   |   |   |-- parking_management.py
+|   |   |   |-- queue_management.py
+|   |   |   |-- region_counter.py
+|   |   |   |-- security_alarm.py
+|   |   |   |-- similarity_search.py
+|   |   |   |-- solutions.py
+|   |   |   |-- speed_estimation.py
+|   |   |   |-- streamlit_inference.py
+|   |   |   |-- trackzone.py
+|   |   |   |-- vision_eye.py
+|   |   |-- trackers
+|   |   |   |-- utils
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- gmc.py
+|   |   |   |   |-- kalman_filter.py
+|   |   |   |   |-- matching.py
+|   |   |   |-- __init__.py
+|   |   |   |-- basetrack.py
+|   |   |   |-- bot_sort.py
+|   |   |   |-- byte_tracker.py
+|   |   |   |-- README.md
+|   |   |   |-- track.py
+|   |   |-- utils
+|   |   |   |-- callbacks
+|   |   |   |   |-- __init__.py
+|   |   |   |   |-- base.py
+|   |   |   |   |-- clearml.py
+|   |   |   |   |-- comet.py
+|   |   |   |   |-- dvc.py
+|   |   |   |   |-- hub.py
+|   |   |   |   |-- mlflow.py
+|   |   |   |   |-- neptune.py
+|   |   |   |   |-- raytune.py
+|   |   |   |   |-- tensorboard.py
+|   |   |   |   |-- wb.py
+|   |   |   |-- __init__.py
+|   |   |   |-- autobatch.py
+|   |   |   |-- autodevice.py
+|   |   |   |-- benchmarks.py
+|   |   |   |-- checks.py
+|   |   |   |-- dist.py
+|   |   |   |-- downloads.py
+|   |   |   |-- errors.py
+|   |   |   |-- export.py
+|   |   |   |-- files.py
+|   |   |   |-- instance.py
+|   |   |   |-- loss.py
+|   |   |   |-- metrics.py
+|   |   |   |-- ops.py
+|   |   |   |-- patches.py
+|   |   |   |-- plotting.py
+|   |   |   |-- tal.py
+|   |   |   |-- torch_utils.py
+|   |   |   |-- triton.py
+|   |   |   |-- tuner.py
+|   |   |-- __init__.py
+|   |-- .dockerignore
+|   |-- .gitignore
+|   |-- CITATION.cff
+|   |-- CONTRIBUTING.md
+|   |-- LICENSE
+|   |-- mkdocs.yml
+|   |-- pyproject.toml
+|   |-- README.md
+|   |-- README.zh-CN.md
+|-- PROJECT_TREE.txt
