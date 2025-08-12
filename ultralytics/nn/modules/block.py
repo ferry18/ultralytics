@@ -52,6 +52,17 @@ __all__ = (
     "PSA",
     "SCDown",
     "TorchVision",
+    "HardSigmoid",
+    "HardSwish",
+    "SELayer",
+    "DepSepConvHS",
+    "StdPool",
+    "MCAGate",
+    "MCALayer",
+    "LightweightMSFFM",
+    "MiniResidualBlock",
+    "MAFR",
+    "C3TRv2",
 )
 
 
@@ -2031,3 +2042,213 @@ class SAVPE(nn.Module):
         aggregated = score.transpose(-2, -3) @ x.reshape(B, self.c, C // self.c, -1).transpose(-1, -2)
 
         return F.normalize(aggregated.transpose(-2, -3).reshape(B, Q, -1), dim=-1, p=2)
+
+
+class HardSigmoid(nn.Module):
+    def __init__(self, inplace: bool = False):
+        super().__init__()
+        self.relu6 = nn.ReLU6(inplace=inplace)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.relu6(x + 3) / 6
+
+
+class HardSwish(nn.Module):
+    def __init__(self, inplace: bool = False):
+        super().__init__()
+        self.hsig = HardSigmoid(inplace=inplace)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return x * self.hsig(x)
+
+
+class SELayer(nn.Module):
+    def __init__(self, inp: int, oup: int, reduction: int = 4):
+        super().__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Sequential(
+            nn.Conv2d(oup, max(reduction, inp // reduction), 1, 1, 0, bias=True),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(max(reduction, inp // reduction), oup, 1, 1, 0, bias=True),
+            HardSigmoid(),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        b, c, _, _ = x.size()
+        y = self.avg_pool(x)
+        y = self.fc(y).view(b, c, 1, 1)
+        return x * y
+
+
+class DepSepConvHS(nn.Module):
+    def __init__(self, inp: int, oup: int, kernel_size: int, stride: int, use_se: bool):
+        super().__init__()
+        padding = (kernel_size - 1) // 2
+        layers = [
+            nn.Conv2d(inp, inp, kernel_size, stride, padding, groups=inp, bias=False),
+            nn.BatchNorm2d(inp),
+            HardSwish(),
+        ]
+        if use_se:
+            layers.append(SELayer(inp, inp))
+        layers += [
+            nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
+            nn.BatchNorm2d(oup),
+            HardSwish(),
+        ]
+        self.conv = nn.Sequential(*layers)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.conv(x)
+
+
+class StdPool(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        b, c, _, _ = x.size()
+        std = x.view(b, c, -1).std(dim=2, keepdim=True)
+        return std.reshape(b, c, 1, 1)
+
+
+class MCAGate(nn.Module):
+    def __init__(self, k_size: int, pool_types=("avg", "std")):
+        super().__init__()
+        pools = []
+        for p in pool_types:
+            if p == "avg":
+                pools.append(nn.AdaptiveAvgPool2d(1))
+            elif p == "std":
+                pools.append(StdPool())
+            else:
+                pools.append(nn.AdaptiveMaxPool2d(1))
+        self.pools = nn.ModuleList(pools)
+        self.conv = nn.Conv2d(1, 1, kernel_size=(1, k_size), stride=1, padding=(0, (k_size - 1) // 2), bias=False)
+        self.sigmoid = nn.Sigmoid()
+        self.weight = nn.Parameter(torch.rand(len(pool_types)))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        feats = [pool(x) for pool in self.pools]
+        if len(feats) == 1:
+            out = feats[0]
+        elif len(feats) == 2:
+            w = torch.sigmoid(self.weight)
+            out = 0.5 * (feats[0] + feats[1]) + w[0] * feats[0] + w[1] * feats[1]
+        else:
+            s = torch.zeros_like(feats[0])
+            for i, f in enumerate(feats):
+                s = s + torch.sigmoid(self.weight[i]) * f
+            out = s
+        out = out.permute(0, 3, 2, 1).contiguous()
+        out = self.conv(out)
+        out = out.permute(0, 3, 2, 1).contiguous()
+        out = self.sigmoid(out)
+        return x * out.expand_as(x)
+
+
+class MCALayer(nn.Module):
+    def __init__(self, inp: int, no_spatial: bool = True):
+        super().__init__()
+        lambd, gamma = 1.5, 1
+        temp = round(abs((math.log2(inp) - gamma) / lambd)) if inp > 0 else 3
+        kernel = temp if temp % 2 else max(3, temp - 1)
+        self.h_cw = MCAGate(3)
+        self.w_hc = MCAGate(3)
+        self.no_spatial = no_spatial
+        if not no_spatial:
+            self.c_hw = MCAGate(kernel)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x_h = self.h_cw(x.permute(0, 2, 1, 3).contiguous())
+        x_h = x_h.permute(0, 2, 1, 3).contiguous()
+        x_w = self.w_hc(x.permute(0, 3, 2, 1).contiguous())
+        x_w = x_w.permute(0, 3, 2, 1).contiguous()
+        if not self.no_spatial:
+            x_c = self.c_hw(x)
+            return (x_c + x_h + x_w) / 3
+        return (x_h + x_w) / 2
+
+
+class LightweightMSFFM(nn.Module):
+    def __init__(self, inp: int):
+        super().__init__()
+        self.conv1 = nn.Conv2d(inp, inp // 8, kernel_size=1)
+        self.conv3 = nn.Conv2d(inp, inp // 8, kernel_size=3, padding=1, groups=max(1, inp // 8))
+        self.conv5 = nn.Conv2d(inp, inp // 8, kernel_size=5, padding=2, groups=max(1, inp // 8))
+        self.conv7 = nn.Conv2d(inp, inp // 8, kernel_size=7, padding=3, groups=max(1, inp // 8))
+        self.fusion = nn.Conv2d(inp // 2, inp, kernel_size=1)
+        self.relu = nn.ReLU(inplace=True)
+        self.se = SELayer(inp, inp)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x1 = self.conv1(x)
+        x3 = self.conv3(x)
+        x5 = self.conv5(x)
+        x7 = self.conv7(x)
+        out = torch.cat([x1, x3, x5, x7], dim=1)
+        out = self.relu(self.fusion(out))
+        out = self.se(out)
+        return out + x
+
+
+class MiniResidualBlock(nn.Module):
+    def __init__(self, channels: int):
+        super().__init__()
+        self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm2d(channels)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(channels)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        residual = x
+        out = self.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        out = self.relu(out + residual)
+        return out
+
+
+class MAFR(nn.Module):
+    def __init__(self, inp: int, no_spatial: bool = True):
+        super().__init__()
+        self.mca = MCALayer(inp, no_spatial)
+        self.lmsffm = LightweightMSFFM(inp)
+        self.mini_res = MiniResidualBlock(inp)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x_mca = self.mca(x)
+        x_lmsffm = self.lmsffm(x_mca)
+        return self.mini_res(x_lmsffm)
+
+
+class C3TRv2(nn.Module):
+    def __init__(self, c1: int, c2: int, n: int = 1, e: float = 0.5):
+        super().__init__()
+        c_ = int(c2 * e)
+        self.c1_top = Conv(c1, c_, 1, 1)
+        self.c1_bot = Conv(c1, c_, 1, 1)
+        self.top_bottlenecks = nn.Sequential(*(Bottleneck(c_, c_, True, 1, k=(3, 3), e=1.0) for _ in range(n)))
+        self.cbs3 = Conv(2 * c_, c_, 1, 1)
+        self.linear = nn.Linear(c_, c_)
+        self.trans_layers = nn.Sequential(*(TransformerBlock(c_, c_, 4, 1) for _ in range(n)))
+        self.final_trans = TransformerBlock(c_, c_, 4, 1)
+        self.proj_out = Conv(c_, c2, 1, 1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        b, _, h, w = x.shape
+        y_top = self.c1_top(x)
+        y_bot = self.c1_bot(x)
+        y_top = self.top_bottlenecks(y_top)
+        y = torch.cat([y_top, y_bot], dim=1)
+        y = self.cbs3(y)
+        shortcut = y
+        # reshape for transformer
+        tokens = y.flatten(2).transpose(1, 2)  # b, hw, c_
+        t_out = self.trans_layers(tokens)
+        t_lin = self.linear(tokens)
+        t_sum = t_out + t_lin
+        y2 = t_sum.transpose(1, 2).reshape(b, -1, h, w)
+        y_final_in = y2 + shortcut
+        y_final = self.final_trans(y_final_in)
+        return self.proj_out(y_final)
