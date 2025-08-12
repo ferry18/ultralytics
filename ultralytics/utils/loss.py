@@ -283,7 +283,37 @@ class AWLoss(nn.Module):
         
         return (scale_diff_w + scale_diff_h) * 0.5
     
-    def forward(self, pred_bbox, gt_bbox, reduction='mean'):
+    def occlusion_aware_factor(self, pred_bboxes, iou_threshold=0.5):
+        """
+        Compute occlusion-aware factor based on IoU between predicted boxes.
+        
+        This estimates local density for drone swarm detection.
+        """
+        # Calculate pairwise IoU between all predicted boxes
+        # This helps detect overlapping/occluded targets
+        n = pred_bboxes.shape[0]
+        if n <= 1:
+            return torch.ones_like(pred_bboxes[..., 0])
+        
+        # Convert to xyxy format for IoU calculation
+        x1 = pred_bboxes[..., 0] - pred_bboxes[..., 2] / 2
+        y1 = pred_bboxes[..., 1] - pred_bboxes[..., 3] / 2
+        x2 = pred_bboxes[..., 0] + pred_bboxes[..., 2] / 2
+        y2 = pred_bboxes[..., 1] + pred_bboxes[..., 3] / 2
+        
+        # Calculate IoU matrix
+        boxes_xyxy = torch.stack([x1, y1, x2, y2], dim=-1)
+        iou_matrix = bbox_iou(boxes_xyxy, boxes_xyxy, xywh=False, GIoU=False, DIoU=False, CIoU=False)
+        
+        # Count overlapping boxes (excluding self)
+        overlap_count = (iou_matrix > iou_threshold).float().sum(dim=-1) - 1
+        
+        # Higher occlusion factor for boxes with more overlaps
+        occlusion_factor = 1.0 + 0.5 * torch.sigmoid(overlap_count - 2)
+        
+        return occlusion_factor
+    
+    def forward(self, pred_bbox, gt_bbox, reduction='mean', enable_occlusion=True):
         """
         Compute Area-weighted Wasserstein Loss.
         
@@ -293,6 +323,7 @@ class AWLoss(nn.Module):
             pred_bbox: Predicted bounding boxes [..., 4] in (cx, cy, w, h) format
             gt_bbox: Ground truth bounding boxes [..., 4] in (cx, cy, w, h) format
             reduction: 'none', 'mean', or 'sum'
+            enable_occlusion: Whether to apply occlusion-aware factor
             
         Returns:
             loss: Computed AWLoss
@@ -310,6 +341,11 @@ class AWLoss(nn.Module):
         # Add scale difference term
         scale_diff = self.scale_difference_term(pred_bbox, gt_bbox)
         loss = loss + 0.1 * scale_diff * area_weight
+        
+        # Apply occlusion-aware factor if enabled (for drone swarms)
+        if enable_occlusion and pred_bbox.shape[0] > 1:
+            occlusion_factor = self.occlusion_aware_factor(pred_bbox)
+            loss = loss * occlusion_factor
         
         # Apply reduction
         if reduction == 'mean':

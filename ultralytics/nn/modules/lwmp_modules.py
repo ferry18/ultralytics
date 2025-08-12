@@ -188,8 +188,25 @@ class PPLCNet(nn.Module):
 
 
 def lcnet_075(c1=3, pretrained=False):
-    """Create PP-LCNet with 0.75x scale factor."""
-    return PPLCNet(scale=0.75, in_channels=c1)
+    """
+    Create PP-LCNet with 0.75x scale factor.
+    
+    Returns a backbone that outputs a list of features instead of a single tensor.
+    This matches YOLO's multi-scale feature extraction pattern.
+    """
+    class LCNetBackbone(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.backbone = PPLCNet(scale=0.75, in_channels=c1)
+            
+        def forward(self, x):
+            # Get multi-scale features
+            features = self.backbone(x)
+            # Return the last feature (P5) for compatibility with YOLO head structure
+            # The intermediate features can be accessed via indexing in the yaml
+            return features[-1]  # Return P5/32
+    
+    return LCNetBackbone()
 
 
 # MAFR Module Components
@@ -199,14 +216,9 @@ class MultidimensionalAttention(nn.Module):
         super().__init__()
         self.channels = channels
         
-        # Channel attention
-        self.channel_squeeze = nn.Sequential(
-            nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(channels, channels // 16, 1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(channels // 16, channels, 1),
-            nn.Sigmoid()
-        )
+        # Channel attention - processes concatenated avg and std
+        self.channel_fc1 = nn.Conv2d(channels * 2, channels // 16, 1)
+        self.channel_fc2 = nn.Conv2d(channels // 16, channels, 1)
         
         # Height attention
         self.height_conv = nn.Conv2d(channels, 1, kernel_size=1)
@@ -218,10 +230,18 @@ class MultidimensionalAttention(nn.Module):
         b, c, h, w = x.size()
         
         # Channel attention (Eq. 3-5)
-        channel_avg = F.adaptive_avg_pool2d(x, 1)
-        channel_std = torch.std(x.view(b, c, -1), dim=2, keepdim=True).unsqueeze(-1)
-        channel_stats = torch.cat([channel_avg, channel_std], dim=1)
-        channel_attention = self.channel_squeeze(x)
+        # Eq. 3: Average pooling
+        channel_avg = F.adaptive_avg_pool2d(x, 1)  # [B, C, 1, 1]
+        
+        # Eq. 4: Standard deviation pooling
+        channel_std = torch.std(x.view(b, c, -1), dim=2, keepdim=True).unsqueeze(-1)  # [B, C, 1, 1]
+        
+        # Concatenate avg and std as per paper
+        channel_stats = torch.cat([channel_avg, channel_std], dim=1)  # [B, 2C, 1, 1]
+        
+        # Eq. 5: Generate channel attention through FC layers
+        channel_attention = F.relu(self.channel_fc1(channel_stats))
+        channel_attention = torch.sigmoid(self.channel_fc2(channel_attention))
         x_channel = x * channel_attention
         
         # Height attention (Eq. 6)
