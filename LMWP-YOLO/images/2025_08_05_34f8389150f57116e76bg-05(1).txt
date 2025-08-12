@@ -1,0 +1,70 @@
+Overall Architecture
+The model processes an input image through a feature extraction backbone. Feature maps from three different scales of the backbone are then fed into a feature fusion neck. The neck combines these features through a series of top-down and bottom-up paths to generate three enhanced feature maps. These three maps are passed to the Head, which produces the final detection results, such as bounding boxes on an image.
+
+1. Lightweight Feature Extraction Network Based on PP-LCNet (Backbone)
+This network has a pyramidal structure that extracts features at progressively smaller spatial resolutions.
+
+Input: An image, depicted with a drone.
+
+Structure: It consists of a stack of :PP-LCBlock layers (light green). The top of the pyramid is composed of a :C2PSA block (yellow) followed by an SPPF block (blue).
+
+Output: It provides three feature maps to the Neck from three different levels of the pyramid. Let's denote these outputs from top to bottom (smallest to largest spatial resolution) as Backbone_Out_Small, Backbone_Out_Mid, and Backbone_Out_Large.
+
+2. Efficient Multi-Scale Feature Fusion Network Based on MAFR (Neck)
+This network refines and combines the features from the backbone. It consists of a top-down path and a bottom-up path.
+
+Top-Down Path:
+
+The Backbone_Out_Small feature map is processed by a :MAFR block (pink). Let the output be Neck_P1.
+
+Neck_P1 is upsampled (Upsample) and concatenated (Concat) with the Backbone_Out_Mid feature map.
+
+The concatenated result is processed by a second :MAFR block. Let the output be Neck_P2.
+
+Neck_P2 is upsampled and concatenated with the Backbone_Out_Large feature map.
+
+This concatenated result is processed by a third :MAFR block. The output of this block is the first input to the Head, denoted as Head_Input_Large.
+
+Bottom-Up Path:
+
+Head_Input_Large is processed by a downsampling block (unlabeled gray block) and then concatenated with Neck_P2.
+
+The concatenated result is processed by a fourth :MAFR block. The output of this block is the second input to the Head, denoted as Head_Input_Mid.
+
+Head_Input_Mid is processed by a downsampling block (unlabeled gray block) and then concatenated with Neck_P1.
+
+This final concatenated result is processed by a fifth :MAFR block. The output is the third input to the Head, denoted as Head_Input_Small.
+
+3. Head
+The Head consists of three :Detect blocks (dark yellow/brown).
+
+Each :Detect block takes one of the three outputs from the Neck (Head_Input_Large, Head_Input_Mid, Head_Input_Small) to generate the final bounding box predictions and class probabilities.
+
+4. Results
+This section shows two example output images with detected drones enclosed in blue bounding boxes, demonstrating the model's functionality.
+
+Legend
+The diagram includes a legend defining the symbols and colors for each module:
+
+:PP-LCBlock: Light green square, the main block of the backbone.
+
+SPPF: Blue square, a block at the top of the backbone.
+
+:C3K2: Light beige square (not explicitly placed in the main diagram flow).
+
+:C2PSA: Yellow square, a block in the upper part of the backbone.
+
+:MAFR: Pink square, the main block of the feature fusion neck.
+
+Detect: Dark yellow/brown square, represents a detection head layer.
+
+Upsample: A square containing a grid and an upward arrow, representing an upsampling operation.
+
+:Concat: A circle with an asterisk inside, representing a concatenation operation.
+
+
+
+
+
+
+

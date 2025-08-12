@@ -1,0 +1,65 @@
+
+:Stem Conv/h-swish: An initial convolutional layer (stem) with h-swish activation, shown in beige.
+
+:3x3 DepthSepConv: A depthwise separable convolution block using a 3×3 kernel, shown in light green.
+
+:5x5 DepthSepConv: A depthwise separable convolution block using a 5×5 kernel, shown in light blue.
+
+Network Architecture
+The network processes an input through a stem, four sequential stages of depthwise separable convolution blocks, and a final classifier head.
+
+1. Stem Block
+
+The network begins with a single (x1) :Stem Conv/h-swish block.
+
+It transforms the input into a feature map with dimensions 16×112×112.
+
+2. Stage 1
+
+Consists of two (x2) :3x3 DepthSepConv blocks.
+
+The output feature map from this stage has dimensions 64×56×56.
+
+3. Stage 2
+
+Consists of two (x2) :3x3 DepthSepConv blocks.
+
+The output feature map from this stage has dimensions 128×28×28.
+
+4. Stage 3
+
+Consists of two (x2) :3x3 DepthSepConv blocks.
+
+The output feature map from this stage has dimensions 256×14×14.
+
+5. Stage 4
+
+Consists of seven (x7) :5x5 DepthSepConv blocks.
+
+The diagram indicates the output feature map from this stage has dimensions 16×112×112.
+
+6. Classifier Head
+
+The output from Stage 4 is fed into a Global Average Pooling (GAP) layer.
+
+The result is passed to a Fully Connected (FC) layer with 1280 output units and h-swish activation (1280FC/h-swish).
+
+The final layer is a Fully Connected (FC) layer with 1000 output units (1000 FC).
+
+Internal Structure of a DepthSepConv Block
+The diagram provides a detailed view of a DepthSepConv block's components inside a red dashed rectangle:
+
+Depthwise Convolution: The input first passes through a 3×3 depthwise convolution with h-swish activation (3x3 DW/h-swish).
+
+Pointwise Convolution: The output is then processed by a 3×3 pointwise convolution with h-swish activation (3x3 PW/h-swish).
+
+Squeeze-and-Excitation (SE) Module: In parallel, the output of the pointwise convolution is also fed into an SE block. The SE block's output modulates the feature map from the pointwise convolution (indicated by a dashed arrow).
+
+Internal Structure of the SE Module
+The SE block itself consists of the following sequence:
+
+A Global Average Pooling (GAP) layer.
+
+A Fully Connected layer with ReLU activation (FC/relu).
+
+A Fully Connected layer with h-sigmoid activation (FC/h-sigmoid), which produces the final channel-wise weights.

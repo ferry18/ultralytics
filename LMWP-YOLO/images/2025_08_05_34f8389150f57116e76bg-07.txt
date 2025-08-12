@@ -1,0 +1,217 @@
+Overall Structure
+The architecture represents a processing pipeline where the output of the "Multidimensional collaborative attention" block serves as an input to the "Lightweight MSFFM" block. The output of the "Lightweight MSFFM" block is then fed into the "Mini Residual Block".
+
+1. Multidimensional collaborative attention
+This module processes an input feature map F 
+in
+​
+ ∈R 
+H×W×C
+ . It is designed with a split-transform-merge strategy, including three parallel attention branches and a residual identity path.
+
+Input Split: The input tensor F 
+in
+​
+  is split along the channel dimension into two tensors of equal size: F 
+1
+​
+ ∈R 
+H×W×C/2
+  and F 
+2
+​
+ ∈R 
+H×W×C/2
+ .
+
+Identity Path: The tensor F 
+2
+​
+  follows a direct identity path, labeled 'Identity' and '1/2'.
+
+Attention Path: The tensor F 
+1
+​
+  is fed into three parallel attention branches:
+
+Height Attention Branch (Top):
+
+Permutation: The dimensions of F 
+1
+​
+  are permuted from (H,W,C/2) to (W,H,C/2).
+
+Squeeze Transformation: AvgPool and StdPool are applied to generate feature descriptors.
+
+Excitation Transformation: The descriptors are processed by a small neural network, indicated by 1/r Conv2d, which consists of two Conv2d layers with a bottleneck of ratio r.
+
+Sigmoid: A Sigmoid activation function calculates the attention weights S 
+H
+​
+ .
+
+Permutation: The weights are permuted back to align with F 
+1
+​
+ 's dimensions.
+
+Multiplication: The input F 
+1
+​
+  is multiplied element-wise with the attention weights: F 
+H
+′
+​
+ =F 
+1
+​
+ ⊗S 
+H
+​
+ .
+
+Width Attention Branch (Middle):
+
+Permutation: The dimensions of F 
+1
+​
+  are permuted from (H,W,C/2) to (C/2,W,H).
+
+Squeeze Transformation: AvgPool and StdPool are applied.
+
+Excitation Transformation: A 1/r Conv2d block processes the descriptors.
+
+Sigmoid: A Sigmoid activation function calculates the attention weights S 
+W
+​
+ .
+
+Permutation: The weights are permuted back.
+
+Multiplication: The input F 
+1
+​
+  is multiplied element-wise with the attention weights: F 
+W
+′
+​
+ =F 
+1
+​
+ ⊗S 
+W
+​
+ .
+
+Channel Attention Branch (Bottom):
+
+Squeeze Transformation: Global AvgPool and Global StdPool are applied to F 
+1
+​
+  across its spatial dimensions (H,W) to produce two vectors of size C/2.
+
+Concatenation: The two vectors are concatenated.
+
+Excitation Transformation: The concatenated vector is passed through a 1/r Conv2d block.
+
+Sigmoid: A Sigmoid function calculates channel attention weights S 
+C
+​
+ .
+
+Multiplication: The input F 
+1
+​
+  is scaled by the channel attention weights: F 
+C
+′
+​
+ =F 
+1
+​
+ ⊗S 
+C
+​
+ .
+
+Integration:
+
+The outputs of the three attention branches are summed element-wise: F 
+H
+′
+​
+ ⊕F 
+W
+′
+​
+ ⊕F 
+C
+′
+​
+ .
+
+The sum is scaled by a factor of 1/3, producing the final attention path output, F 
+att
+​
+ .
+
+Final Output: The output of the attention path, F 
+att
+​
+ ∈R 
+H×W×C/2
+ , is concatenated with the identity path tensor, F 
+2
+​
+ ∈R 
+H×W×C/2
+ , along the channel axis. This produces the final output of the module, F 
+out
+​
+ ∈R 
+H×W×C
+ .
+
+2. Lightweight MSFFM (Multi-Scale Feature Fusion Module)
+This module fuses feature maps from multiple scales.
+
+Inputs: It takes four input feature maps of different spatial scales. The diagram suggests these inputs are concatenated.
+
+Processing Pipeline:
+
+Feature Fusion: A 1×1 Conv2d layer is applied to the concatenated feature maps to integrate cross-channel information and adjust channel dimensions.
+
+SE Block with Residual Connection:
+
+The output from the Conv2d layer enters a Squeeze-and-Excitation (SE) module to perform channel-wise feature recalibration.
+
+A skip connection runs in parallel to the SE module.
+
+The output of the SE module is added element-wise (⊞ Add) to the skip connection's tensor.
+
+Output: The result of the addition is the output of the MSFFM module.
+
+3. Mini Residual Block
+This is a standard residual block that processes the output from the Lightweight MSFFM.
+
+Input: The block receives one input tensor.
+
+Main Path:
+
+Conv2d 3x3: A 3×3 convolutional layer.
+
+BatchNorm2d: Batch normalization.
+
+ReLU: ReLU activation function.
+
+Conv2d 3x3: A second 3×3 convolutional layer.
+
+BatchNorm2d: Batch normalization.
+
+Skip Connection: A direct identity connection bypasses the main path.
+
+Output:
+
+The output of the main path is added element-wise (⊞ Add) to the tensor from the skip connection.
+
+A final ReLU activation is applied to the sum.

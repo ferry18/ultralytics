@@ -1,0 +1,89 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\graphicspath{ {./images/} }
+
+\begin{document}
+
+\section*{Improved loss function based on area-weighted Wasserstein loss}
+In drone small object detection tasks, challenges arise due to the small size of targets, complex backgrounds, and dense distributions. Consequently, the robustness and accuracy of bounding box similarity measures are crucial for detection performance. However, YOLO11's loss function, which relies on an IoU-based bounding box regression mechanism, has notable limitations. It is highly sensitive to small positional shifts in targets and encounters gradient vanishing issues when bounding boxes have no overlap or are fully enclosed. To overcome these limitations, this study introduces a novel loss function. The key idea is to model the similarity between bounding boxes as a two-dimensional Gaussian distribution ${ }^{43}$ and use the Wasserstein distance to compute the distributional difference between predicted and ground-truth boxes. A dynamic weighting mechanism based on target area prioritizes the optimization of small objects, while the inclusion of a scale difference term improves the loss function's adaptability to multi-scale scenarios.
+
+The horizontal bounding box $R=\left(c_{x}, c_{y}, w, h\right)$ is represented as a two-dimensional Gaussian distribution. In this representation, ( $c_{x}, c_{y}$ ) denotes the center point coordinates, while w and h indicate the width and height of the box, respectively. The Gaussian distribution corresponding to this representation is defined as:
+
+
+\begin{equation*}
+N(x \mid \mu, \Sigma)=\frac{1}{2 \pi|\Sigma|^{1 / 2}} \exp \left(-\frac{1}{2}(x-\mu)^{T} \Sigma^{-1}(x-\mu)\right) \tag{10}
+\end{equation*}
+
+
+Here, $\mu=\left[\begin{array}{l}c_{x} \\ c_{y}\end{array}\right], \Sigma=\left[\begin{array}{cc}\frac{w^{2}}{4} & 0 \\ 0 & \frac{h^{2}}{4}\end{array}\right] . \mu$ represents the center of the Gaussian distribution, corresponding to the center point of the bounding box. $\Sigma$ is the covariance matrix, which defines the width and height of the box. Using this model concept, the predicted bounding box A and the ground truth bounding box B can be represented as $N_{A}\left(\mu_{A}, \Sigma_{A}\right)$ and $N_{B}\left(\mu_{B}, \Sigma_{B}\right)$, respectively. The 2D Wasserstein distance is defined as:
+
+
+\begin{equation*}
+W_{2}^{2}\left(N_{A}, N_{B}\right)=\left\|\mu_{A}-\mu_{B}\right\|_{2}^{2}+\operatorname{Tr}\left(\Sigma_{A}+\Sigma_{B}-2\left(\Sigma_{B}^{1 / 2} \Sigma_{A} \Sigma_{B}^{1 / 2}\right)^{1 / 2}\right) \tag{11}
+\end{equation*}
+
+
+This can be simplified as:
+
+
+\begin{equation*}
+W_{2}^{2}\left(N_{A}, N_{B}\right)=\left\|\mu_{A}-\mu_{B}\right\|_{2}^{2}+\left\|\Sigma_{A}^{1 / 2}-\Sigma_{B}^{1 / 2}\right\|_{F}^{2} \tag{12}
+\end{equation*}
+
+
+Coupled with bounding boxes $R_{A}$ and $R_{B}$, the equation can be formulated as:
+
+
+\begin{equation*}
+W_{2}^{2}\left(N_{A}, N_{B}\right)=\left\|\left[c x_{A}, c y_{A}, \frac{w_{A}}{2}, \frac{h_{A}}{2}\right]^{T},\left[c x_{B}, c y_{B}, \frac{w_{B}}{2}, \frac{h_{B}}{2}\right]^{T}\right\|_{2}^{2} \tag{13}
+\end{equation*}
+
+
+To constrain the 2D Wasserstein distance within the range $(0,1)$, the typical 2D Wasserstein distance can be expressed as:
+
+
+\begin{equation*}
+N W D\left(N_{A}, N_{B}\right)=\exp \left(-\frac{\sqrt{W_{2}^{2}\left(N_{A}, N_{B}\right)}}{C}\right) \tag{14}
+\end{equation*}
+
+
+C is the normalization constant, determined based on the statistical information of the dataset. The schematic diagram of the predicted box and ground truth box is shown in Fig. 7. The box loss function can be expressed as:
+
+
+\begin{equation*}
+L_{b o x}=1-N W D\left(N_{A}, N_{B}\right) \tag{15}
+\end{equation*}
+
+
+The classification loss function can be expressed as:
+
+
+\begin{equation*}
+L_{c l s}=\sum_{i=0}^{s^{2}} \sum_{j=0}^{B} 1_{i j}^{o b j} \sum_{c \in N_{C}}\left[\hat{p}_{i}(c) \log \left(p_{i}(c)\right)+(1-\hat{p}) \times \log \left(1-p_{i}(c)\right)\right] \tag{16}
+\end{equation*}
+
+
+In this context, $S^{2}$ represents the total number of grid cells in the image, B denotes the number of bounding boxes, $N_{C}$ refers to the number of object categories, and $p_{i}$ represents the confidence score of bounding box i for class C . The object confidence loss function is defined as:
+
+
+\begin{equation*}
+L_{o b j}=\sum_{i=0}^{s^{2}} \sum_{j=0}^{B}\left[1_{i j}^{o b j}\left(C_{i}-\hat{C}_{i}\right)-1_{i j}^{n o o b j}\left(C_{i}-\hat{C}_{i}\right)\right] \tag{17}
+\end{equation*}
+
+
+Here, $1_{i j}^{o b j}$ represents the object located in cell i , selected by the j -th bounding box. $C_{i}$ and $\hat{C}_{i}$ denote the predicted and actual confidence levels, respectively. The loss function for iterative computation is defined as the sum of the three previously described functions, formulated as:
+
+
+\begin{equation*}
+L=\lambda_{b o x} \cdot L_{b o x}+\lambda_{c l s} \cdot L_{c l s}+\lambda_{o b j} \cdot L_{o b j} \tag{18}
+\end{equation*}
+
+
+In this case, $\lambda_{b o x}, \lambda_{c l s}$, and $\lambda_{o b j}$ denote the respective weights assigned to each loss function. In the approach described, the bounding box is modeled as a two-dimensional Gaussian distribution. The normalized Wasserstein distance is employed to precisely quantify differences in the position and size of the bounding boxes, ensuring smooth gradient calculations even in scenarios without overlap or containment relationships.
+
+This paper subsequently introduces a dynamic weighting mechanism based on target area. A sigmoid mapping is applied to the target area, allowing the optimization weights for bounding box regression to be dynamically adjusted according to target size. Smaller targets are assigned higher weights, increasing their priority during optimization and significantly enhancing the model's sensitivity to detecting small objects. Finally, a relative scale difference term is added to the loss function to explicitly quantify the width and height differences between predicted and ground truth boxes. This encourages more precise predictions of target dimensions, thereby improving detection performance across multi-scale scenarios.
+
+\end{document}

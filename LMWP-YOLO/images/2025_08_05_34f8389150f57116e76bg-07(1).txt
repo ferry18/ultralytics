@@ -1,0 +1,47 @@
+The legend defines the following symbols:
+
+Conv2d: A 2D Convolutional layer.
+
+Concat: A concatenation operation.
+
+Add: An element-wise addition operation.
+
+Lightweight Multi-Scale Feature Fusion Module
+This module processes four parallel input feature maps of different scales.
+
+Input: Four feature maps, depicted as tensors of decreasing spatial dimensions from bottom to top.
+
+Concatenation: The four input feature maps are merged along the channel dimension using a 'Concat' operation.
+
+Convolution: The concatenated feature map is processed by a 'Conv2d' layer with a 1×1 kernel.
+
+Activation: The result passes through a Rectified Linear Unit ('ReLU') activation function.
+
+SE Block: The output of the ReLU function is fed into a Squeeze-and-Excitation ('SE') module.
+
+The output of this module is the input for the Mini Residual Block.
+
+Mini Residual Block
+This block features a residual (or skip) connection.
+
+Input: Receives the feature map from the Lightweight Multi-Scale Feature Fusion Module.
+
+Residual Connection: A skip connection is established from the input of the block, which is later added to the output of the block's main processing path.
+
+Main Path: The input is processed by the following sequence of layers:
+
+A 'Conv2d' layer with a 3×3 kernel.
+
+A 'BatchNorm2d' (2D Batch Normalization) layer.
+
+A 'ReLU' activation function.
+
+A second 'Conv2d' layer with a 3×3 kernel.
+
+A second 'BatchNorm2d' layer.
+
+Addition: The output of the main path (from the second 'BatchNorm2d' layer) is element-wise added to the input from the residual connection via the 'Add' operation.
+
+Final Activation: The resulting sum is passed through a final 'ReLU' activation function.
+
+The output of the final ReLU function is the overall output of the entire architecture shown.

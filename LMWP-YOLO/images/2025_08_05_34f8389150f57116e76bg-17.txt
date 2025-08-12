@@ -1,0 +1,55 @@
+This is a block diagram of the C3TR Module.
+
+The diagram includes a legend where * denotes a Concatenation operation and + denotes an Addition operation.
+
+The data flow of the module is as follows:
+
+An Input tensor is processed by two parallel CBS (Convolution, Batch Normalization, SiLU activation) blocks.
+
+The output of the top CBS block is fed into an N x Bottleneck block.
+
+The output of the N x Bottleneck block is concatenated (*) with the output of the bottom CBS block.
+
+The result of the concatenation is passed through a third CBS block.
+
+The output from this third CBS block splits and serves as input to two parallel paths: a lower path and an upper path.
+
+Lower Path (Shortcut Connection):
+
+The output of the third CBS block is passed directly as an input to the final Transformer Block.
+
+Upper Path (Transformer Processing):
+This path is enclosed within a large gray dashed rectangle.
+
+The output of the third CBS block is first reshaped.
+
+The reshaped tensor follows two sub-paths:
+
+Sub-path A: It is fed into a sequence of 'n' Transformer Layer blocks. The input to the first Transformer Layer is the reshaped tensor.
+
+Sub-path B: The same reshaped tensor is passed through a single Linear layer.
+
+The final output of the 'n' Transformer Layer sequence (from Sub-path A) is added (+) to the output of the Linear layer (from Sub-path B).
+
+The result of this addition is the second input to the final Transformer Block.
+
+Transformer Layer Internal Structure:
+The structure of a single Transformer Layer is detailed within an orange dashed rectangle, representing a self-attention mechanism.
+
+An input tensor from a "Previeous layer" (presumed to be the output of the preceding layer) is provided.
+
+This input is processed by three parallel Linear layers to generate the Query (Q), Key (K), and Value (V) tensors.
+
+Q, K, and V are fed into a Multihead Attention block.
+
+The output of the Multihead Attention block is added (+) to the initial input from the "Previeous layer". This forms a residual connection.
+
+The result of this addition is passed through a sequence of two Linear layers.
+
+The output of the second Linear layer is added (+) to the input of the first Linear layer, forming a second residual connection.
+
+The result of this second addition is the final output of the Transformer Layer.
+
+Final Output:
+
+The Transformer Block takes the two inputs from the lower and upper paths and produces the final Output of the C3TR module.
