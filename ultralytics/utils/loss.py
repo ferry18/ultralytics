@@ -191,6 +191,135 @@ class KeypointLoss(nn.Module):
         return (kpt_loss_factor.view(-1, 1) * ((1 - torch.exp(-e)) * kpt_mask)).mean()
 
 
+class AWLoss(nn.Module):
+    """
+    Area-weighted Wasserstein Loss for small object detection.
+    
+    Models bounding boxes as 2D Gaussian distributions and uses normalized Wasserstein distance
+    with dynamic area-based weighting for improved small object detection.
+    """
+    
+    def __init__(self, normalization_constant=10.0):
+        """Initialize AWLoss with normalization constant."""
+        super().__init__()
+        self.C = normalization_constant  # Normalization constant for NWD
+        
+    def _bbox_to_gaussian_params(self, bbox):
+        """
+        Convert bounding box to Gaussian parameters.
+        
+        Args:
+            bbox: Tensor of shape [..., 4] with format (cx, cy, w, h)
+            
+        Returns:
+            mu: Mean vector [..., 2] 
+            sigma_sqrt: Square root of covariance [..., 2]
+        """
+        cx, cy, w, h = bbox[..., 0], bbox[..., 1], bbox[..., 2], bbox[..., 3]
+        
+        # Mean vector (Eq. 10 parameters)
+        mu = torch.stack([cx, cy], dim=-1)
+        
+        # Square root of diagonal covariance matrix
+        sigma_sqrt = torch.stack([w / 2, h / 2], dim=-1)
+        
+        return mu, sigma_sqrt
+    
+    def wasserstein_distance(self, pred_bbox, gt_bbox):
+        """
+        Compute 2D Wasserstein distance between predicted and ground truth boxes.
+        
+        Implements Eq. 13: W_2^2(N_A, N_B) = ||[cx_A, cy_A, w_A/2, h_A/2]^T, [cx_B, cy_B, w_B/2, h_B/2]^T||_2^2
+        """
+        # Convert to Gaussian parameters
+        pred_mu, pred_sigma_sqrt = self._bbox_to_gaussian_params(pred_bbox)
+        gt_mu, gt_sigma_sqrt = self._bbox_to_gaussian_params(gt_bbox)
+        
+        # Compute squared Wasserstein distance (Eq. 12 simplified)
+        center_dist = torch.sum((pred_mu - gt_mu) ** 2, dim=-1)
+        size_dist = torch.sum((pred_sigma_sqrt - gt_sigma_sqrt) ** 2, dim=-1)
+        
+        w2_squared = center_dist + size_dist
+        
+        return torch.sqrt(w2_squared + 1e-7)  # Add epsilon for numerical stability
+    
+    def normalized_wasserstein_distance(self, pred_bbox, gt_bbox):
+        """
+        Compute normalized Wasserstein distance (NWD).
+        
+        Implements Eq. 14: NWD(N_A, N_B) = exp(-sqrt(W_2^2(N_A, N_B)) / C)
+        """
+        w2_dist = self.wasserstein_distance(pred_bbox, gt_bbox)
+        nwd = torch.exp(-w2_dist / self.C)
+        return nwd
+    
+    def area_weight(self, gt_bbox):
+        """
+        Compute dynamic area-based weight for small object prioritization.
+        
+        Applies sigmoid mapping to give higher weights to smaller targets.
+        """
+        # Calculate target area
+        area = gt_bbox[..., 2] * gt_bbox[..., 3]
+        
+        # Normalize area (assuming input size 640x640)
+        normalized_area = area / (640 * 640)
+        
+        # Apply inverse sigmoid weighting (smaller area -> higher weight)
+        weight = 1.0 / (1.0 + torch.exp(10 * (normalized_area - 0.1)))
+        
+        return weight
+    
+    def scale_difference_term(self, pred_bbox, gt_bbox):
+        """
+        Compute relative scale difference term for width/height accuracy.
+        """
+        pred_w, pred_h = pred_bbox[..., 2], pred_bbox[..., 3]
+        gt_w, gt_h = gt_bbox[..., 2], gt_bbox[..., 3]
+        
+        # Relative scale differences
+        scale_diff_w = torch.abs(pred_w - gt_w) / (gt_w + 1e-7)
+        scale_diff_h = torch.abs(pred_h - gt_h) / (gt_h + 1e-7)
+        
+        return (scale_diff_w + scale_diff_h) * 0.5
+    
+    def forward(self, pred_bbox, gt_bbox, reduction='mean'):
+        """
+        Compute Area-weighted Wasserstein Loss.
+        
+        Implements Eq. 15: L_box = 1 - NWD(N_A, N_B) with area weighting
+        
+        Args:
+            pred_bbox: Predicted bounding boxes [..., 4] in (cx, cy, w, h) format
+            gt_bbox: Ground truth bounding boxes [..., 4] in (cx, cy, w, h) format
+            reduction: 'none', 'mean', or 'sum'
+            
+        Returns:
+            loss: Computed AWLoss
+        """
+        # Compute normalized Wasserstein distance
+        nwd = self.normalized_wasserstein_distance(pred_bbox, gt_bbox)
+        
+        # Base loss (Eq. 15)
+        loss = 1.0 - nwd
+        
+        # Apply area-based weighting
+        area_weight = self.area_weight(gt_bbox)
+        loss = loss * area_weight
+        
+        # Add scale difference term
+        scale_diff = self.scale_difference_term(pred_bbox, gt_bbox)
+        loss = loss + 0.1 * scale_diff * area_weight
+        
+        # Apply reduction
+        if reduction == 'mean':
+            return loss.mean()
+        elif reduction == 'sum':
+            return loss.sum()
+        else:
+            return loss
+
+
 class v8DetectionLoss:
     """Criterion class for computing training losses for YOLOv8 object detection."""
 
@@ -295,6 +424,93 @@ class v8DetectionLoss:
         loss[2] *= self.hyp.dfl  # dfl gain
 
         return loss * batch_size, loss.detach()  # loss(box, cls, dfl)
+
+
+class AWDetectionLoss(v8DetectionLoss):
+    """Detection loss using Area-weighted Wasserstein Loss for improved small object detection."""
+    
+    def __init__(self, model, tal_topk: int = 10):
+        """Initialize AWDetectionLoss with AWLoss instead of BboxLoss."""
+        super().__init__(model, tal_topk)
+        # Replace bbox_loss with AWLoss
+        self.aw_loss = AWLoss(normalization_constant=10.0).to(self.device)
+        
+    def __call__(self, preds: Any, batch: Dict[str, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Calculate the sum of the loss for box, cls using AWLoss."""
+        loss = torch.zeros(3, device=self.device)  # box, cls, dfl
+        feats = preds[1] if isinstance(preds, tuple) else preds
+        pred_distri, pred_scores = torch.cat([xi.view(feats[0].shape[0], self.no, -1) for xi in feats], 2).split(
+            (self.reg_max * 4, self.nc), 1
+        )
+
+        pred_scores = pred_scores.permute(0, 2, 1).contiguous()
+        pred_distri = pred_distri.permute(0, 2, 1).contiguous()
+
+        dtype = pred_scores.dtype
+        batch_size = pred_scores.shape[0]
+        imgsz = torch.tensor(feats[0].shape[2:], device=self.device, dtype=dtype) * self.stride[0]  # image size (h,w)
+        anchor_points, stride_tensor = make_anchors(feats, self.stride, 0.5)
+
+        # Targets
+        targets = torch.cat((batch["batch_idx"].view(-1, 1), batch["cls"].view(-1, 1), batch["bboxes"]), 1)
+        targets = self.preprocess(targets.to(self.device), batch_size, scale_tensor=imgsz[[1, 0, 1, 0]])
+        gt_labels, gt_bboxes = targets.split((1, 4), 2)  # cls, xyxy
+        mask_gt = gt_bboxes.sum(2, keepdim=True).gt_(0.0)
+
+        # Pboxes
+        pred_bboxes = self.bbox_decode(anchor_points, pred_distri)  # xyxy, (b, h*w, 4)
+
+        _, target_bboxes, target_scores, fg_mask, _ = self.assigner(
+            pred_scores.detach().sigmoid(),
+            (pred_bboxes.detach() * stride_tensor).type(gt_bboxes.dtype),
+            anchor_points * stride_tensor,
+            gt_labels,
+            gt_bboxes,
+            mask_gt,
+        )
+
+        target_scores_sum = max(target_scores.sum(), 1)
+
+        # Cls loss
+        loss[1] = self.bce(pred_scores, target_scores.to(dtype)).sum() / target_scores_sum
+
+        # Bbox loss with AWLoss
+        if fg_mask.sum():
+            target_bboxes_normalized = target_bboxes / stride_tensor
+            
+            # Convert to center format for AWLoss
+            pred_bboxes_cxcywh = xyxy2xywh(pred_bboxes[fg_mask])
+            target_bboxes_cxcywh = xyxy2xywh(target_bboxes_normalized[fg_mask])
+            
+            # Apply AWLoss
+            loss[0] = self.aw_loss(
+                pred_bboxes_cxcywh, 
+                target_bboxes_cxcywh,
+                reduction='sum'
+            ) / target_scores_sum
+            
+            # DFL loss (if used)
+            if self.use_dfl:
+                target_ltrb = bbox2dist(anchor_points, target_bboxes_normalized, self.reg_max)
+                loss[2] = self._df_loss(pred_distri[fg_mask].view(-1, self.reg_max + 1), target_ltrb[fg_mask]) / target_scores_sum
+        
+        loss[0] *= self.hyp.box  # box gain
+        loss[1] *= self.hyp.cls  # cls gain
+        loss[2] *= self.hyp.dfl  # dfl gain
+
+        return loss.sum() * batch_size, loss.detach()  # loss(box, cls, dfl)
+        
+    def _df_loss(self, pred_dist, target):
+        """Return sum of left and right DFL losses."""
+        # Distribution Focal Loss (DFL) proposed in Generalized Focal Loss https://ieeexplore.ieee.org/document/9792391
+        tl = target.long()  # target left
+        tr = tl + 1  # target right
+        wl = tr - target  # weight left
+        wr = 1 - wl  # weight right
+        return (
+            F.cross_entropy(pred_dist, tl.view(-1), reduction="none").view(tl.shape) * wl
+            + F.cross_entropy(pred_dist, tr.view(-1), reduction="none").view(tl.shape) * wr
+        ).mean(-1, keepdim=True)
 
 
 class v8SegmentationLoss(v8DetectionLoss):

@@ -101,6 +101,18 @@ from .transformer import (
     TransformerEncoderLayer,
     TransformerLayer,
 )
+from .lwmp_modules import (
+    HardSigmoid,
+    HardSwish,
+    SELayer,
+    DepSepConv,
+    PPLCNet,
+    lcnet_075,
+    MAFR,
+    MultiScaleFusion,
+    MicroResidualBlock,
+    C3TR_LWMP,
+)
 
 __all__ = (
     "Conv",
@@ -179,4 +191,16 @@ __all__ = (
     "TorchVision",
     "Index",
     "A2C2f",
+    "HardSigmoid",
+    "HardSwish",
+    "SELayer",
+    "DepSepConv",
+    "PPLCNet",
+    "lcnet_075",
+    "MAFR",
+    "MultiScaleFusion",
+    "MicroResidualBlock",
+    "C3TR_LWMP",
+    "L1FilterPruner",
+    "prune_model",
 )
