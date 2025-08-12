@@ -190,9 +190,9 @@ class BboxLoss(nn.Module):
             w_occ = 1.0 + self.aw_beta * (occ.sum(dim=1) / topk)
 
         weight = target_scores.sum(-1)[pos].clamp_min(1e-9)
-        # Combine
+        # Combine (apply same weighting scheme as original IoU loss)
         loss_aw = ((l_box + self.aw_lscale * l_scale) * w_area * w_occ)  # (P,)
-        loss_aw = (loss_aw / weight).sum() / target_scores_sum
+        loss_aw = (loss_aw * weight).sum() / target_scores_sum
 
         # DFL loss
         if self.dfl_loss:
