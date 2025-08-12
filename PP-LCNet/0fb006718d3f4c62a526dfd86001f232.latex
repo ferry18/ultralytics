@@ -1,0 +1,1067 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage{longtable,booktabs,array}
+\usepackage{multirow}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{}
+\date{}
+
+\begin{document}
+
+\begin{quote}
+\textbf{PP-LCNet: A Lightweight CPU Convolutional Neural Network}
+
+Cheng Cui, Tingquan Gao, Shengyu Wei, Yuning Du,\\
+Ruoyu Guo, Shuilong Dong, Bin Lu, Ying Zhou, Xueying Lv, Qiwen Liu,
+Xiaoguang Hu, Dianhai Yu, Yanjun Ma\\
+Baidu Inc.
+\end{quote}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.1111}}@{}}
+\toprule()
+\multirow{10}{*}{\begin{minipage}[b]{\linewidth}\raggedright
+arXiv:2109.15099v1 {[}cs.CV{]} 17 Sep 2021
+\end{minipage}} &
+\multicolumn{8}{>{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.8889} + 14\tabcolsep}@{}}{%
+\begin{minipage}[b]{\linewidth}\raggedright
+\emph{\{}cuicheng01, gaotingquan, weishengyu, duyuning\emph{\}}
+@baidu.com
+\end{minipage}} \\
+&
+\multicolumn{7}{>{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.7778} + 12\tabcolsep}}{%
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Abstract}
+
+\begin{quote}
+\emph{We propose a lightweight CPU network based on the MKLDNN
+acceleration strategy, named PP-LCNet, which improves the performance of
+lightweight models on multi-ple tasks. This paper lists technologies
+which can improve network accuracy while the latency is almost constant.
+With these improvements, the accuracy of PP-LCNet can greatly surpass
+the previous network structure with the same infer-ence time for
+classification. As shown in Figure 1, it outper-forms the most
+state-of-the-art models. And for downstream tasks of computer vision, it
+also performs very well, such as object detection, semantic
+segmentation, etc. All our exper-iments are implemented based on
+PaddlePaddle}1\emph{. Code and pretrained models are available at
+PaddleClas}2\emph{.}
+\end{quote}
+\end{minipage}} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+\includegraphics[width=3.28056in,height=2.675in]{images/image1.png}
+\end{quote}
+\end{minipage} \\
+&
+\multicolumn{7}{>{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.7778} + 12\tabcolsep}}{%
+\begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+\textbf{1. Introduction}\\
+In the past few years, Convolutional Neural Net-
+\end{quote}\strut
+\end{minipage}} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+Figure 1. Comparing the accuracy-latency of different mobile se-ries
+models. Latency tested on Intel®Xeon®Gold 6148 Processor
+
+with batch size of 1 and MKLDNN enabled, the number of thread
+
+is 10.
+\end{quote}
+\end{minipage} \\
+&
+\multicolumn{8}{>{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.8889} + 14\tabcolsep}@{}}{%
+\begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+works (CNNs) represent the workhorses of the most
+\end{quote}
+\end{minipage}} \\
+& \begin{minipage}[b]{\linewidth}\raggedright
+current
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+computer
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+vision
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+applications,
+\end{minipage} &
+\multicolumn{2}{>{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.2222} + 2\tabcolsep}}{%
+\begin{minipage}[b]{\linewidth}\raggedright
+including
+\end{minipage}} &
+\multicolumn{2}{>{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.2222} + 2\tabcolsep}@{}}{%
+\begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+im-
+\end{quote}
+\end{minipage}} \\
+&
+\multicolumn{3}{>{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.3333} + 4\tabcolsep}}{%
+\begin{minipage}[b]{\linewidth}\raggedright
+age classification{[}1, 2{]},
+\end{minipage}} &
+\multicolumn{2}{>{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.2222} + 2\tabcolsep}}{%
+\begin{minipage}[b]{\linewidth}\raggedright
+object detection{[}3{]},
+\end{minipage}} &
+\multicolumn{3}{>{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.3333} + 4\tabcolsep}@{}}{%
+\begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+attention
+\end{quote}
+\end{minipage}} \\
+&
+\multicolumn{8}{>{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.8889} + 14\tabcolsep}@{}}{%
+\begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+prediction{[}4{]}, target tracking{[}5{]}, action recognition{[}6{]},
+se-
+\end{quote}
+\end{minipage}} \\
+&
+\multicolumn{7}{>{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.7778} + 12\tabcolsep}}{%
+\begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+mantic segmentation{[}7, 8{]}, salient object detection{[}9{]} and edge
+detection{[}10{]}.
+
+As the model feature extraction capability increases and the number of
+model parameters and FLOPs get larger, it becomes difficult to achieve
+fast inference speed on mo-bile devices based ARM architecture or CPU
+devices based
+\end{quote}
+\end{minipage}} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+learn stronger feature presentations without increasing la-tency. (ii)
+What are the elements to improve the accuracy of lightweight models on
+CPU. (iii) How to effectively com-bine different strategies for
+designing lightweight models on CPU.
+\end{quote}
+\end{minipage} \\
+&
+\multicolumn{7}{>{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.7778} + 12\tabcolsep}}{%
+\begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+x86 architecture. In this case, many excellent mobile net-works have
+been proposed, but due to the limitations of the MKLDNN, the speed of
+these networks is not ideal on the Intel CPU with MKLDNN enabled. In
+this paper, we re-think the lightweight models elements for network
+designed on Intel-CPU. In particular, we consider the following three
+fundamental questions. (i) How to promote the network to
+\end{quote}
+\end{minipage}} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+Our main contribution is summarizing a series of meth-ods to improve the
+accuracy without increase of inference time, and how to combine these
+methods to get a better bal-ance of accuracy and speed. Based on this,
+we come up with several general rules for designing lightweight CNNs,
+and provide new ideas for other researchers to build CNNs on CPU
+devices. Furthermore, it can provide neural architec-
+\end{quote}
+\end{minipage} \\
+&
+\multicolumn{7}{>{\raggedright\arraybackslash}p{(\columnwidth - 16\tabcolsep) * \real{0.7778} + 12\tabcolsep}}{%
+\begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+1https://github.com/PaddlePaddle\\
+2https://github.com/PaddlePaddle/PaddleClas
+\end{quote}\strut
+\end{minipage}} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+ture search researchers with new ideas when constructing the search
+space, so as to get better models faster.
+\end{quote}
+\end{minipage} \\
+\midrule()
+\endhead
+\bottomrule()
+\end{longtable}
+
+\includegraphics[width=6.875in,height=4.00833in]{images/image2.png}
+
+Figure 2. A detailed view of PP-LCNet. The dotted box represents
+optional modules.The stem part uses standard 3 \emph{×} 3 convolution.
+DepthSepConv means depth-wise separable convolutions, DW means
+depth-wise convolution, PW means point-wise convolution, GAP means
+Global Average Pooling.
+
+\textbf{2. Related Works}
+
+To promote the capabilities of the model, current works usually follow
+two types of methodologies. One is based on manually-designed CNN
+architecture, the other is based on Neural Architecture Search
+(NAS){[}11{]}.
+
+\textbf{Manually-designed Architecture.} The VGG{[}12{]} ex-hibits a
+simple yet effective strategy of constructing very deep networks:
+stacking blocks with the same dimen-sion. GoogLeNet{[}13{]} constructs
+an Inception block, which includes four parallel operations: 1 \emph{×}
+1 convolution, 3 \emph{×} 3 convolution, 5 \emph{×} 5 convolution and
+max pool-ing. GoogLeNet makes the convolutional neural net-work light
+enough, then more and more lighter networks emerge. MobileNetV1{[}14{]}
+replaces the standard convo-lution by depthwise and pointwise
+convolutions, which greatly reduces the amount of parameters and FLOPs
+of the model. The author of MobileNetV2{[}15{]} proposed the Inverted
+block, which further reduces the FLOPs of the model and at the same time
+improves the performance of the model. ShuffleNetV1/V2{[}16{]}{[}17{]}
+exchanges informa-tion through channel shuffle, which reduces the
+unneces-sary overhead of the network structure. The author of
+GhostNet{[}18{]} proposed a novel Ghost module that can gen-erate more
+feature maps with fewer parameters to improve
+
+\begin{quote}
+2
+\end{quote}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+Operator
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Kernel Size
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Stride
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Input
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Output
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+SE
+\end{minipage} \\
+\midrule()
+\endhead
+Conv2D & \multirow{12}{*}{\begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+3 \emph{×} 3\\
+3 \emph{×} 3\\
+3 \emph{×} 3\\
+3 \emph{×} 3\\
+3 \emph{×} 3\\
+3 \emph{×} 3\\
+3 \emph{×} 3\\
+5 \emph{×} 5\\
+5 \emph{×} 5\\
+5 \emph{×} 5\\
+7 \emph{×} 7\\
+1 \emph{×} 1
+\end{quote}\strut
+\end{minipage}} & 2 &
+\multirow{12}{*}{\begin{minipage}[t]{\linewidth}\raggedright
+2242\emph{×} 3\\
+1122\emph{×} 16 1122\emph{×} 32 562\emph{×} 64\\
+562\emph{×} 64\\
+282\emph{×} 128 282\emph{×} 128 142\emph{×} 256 142\emph{×} 256
+72\emph{×} 512\\
+72\emph{×} 512\\
+12\emph{×} 512\strut
+\end{minipage}} &
+\multirow{12}{*}{\begin{minipage}[t]{\linewidth}\raggedright
+1122\emph{×} 16 1122\emph{×} 32 562\emph{×} 64\\
+562\emph{×} 64\\
+282\emph{×} 128 282\emph{×} 128 142\emph{×} 256 142\emph{×} 256
+72\emph{×} 512\\
+72\emph{×} 512\\
+12\emph{×} 512\\
+12\emph{×} 1280\strut
+\end{minipage}} & - \\
+DepthSepConv & & 1 & & & - \\
+DepthSepConv & & 2 & & & - \\
+DepthSepConv & & 1 & & & - \\
+DepthSepConv & & 2 & & & - \\
+DepthSepConv & & 1 & & & - \\
+DepthSepConv & & 2 & & & - \\
+\multirow{2}{*}{5 \emph{×} DepthSepConv DepthSepConv} & & 1 & & & - \\
+& & 2 & & & \multirow{3}{*}{\begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+✓\\
+✓\\
+-
+\end{quote}\strut
+\end{minipage}} \\
+DepthSepConv & & 1 \\
+GAP & & 1 \\
+Conv2d, NBN & & 1 & & & - \\
+\bottomrule()
+\end{longtable}
+
+Table 1. Architecture details of PP-LCNet. SE denotes whether there is a
+Squeeze-and-Excitation in that block. NBN denotes no batch
+normalization.
+
+ing to Intel CPU devices, the situation will be a little dif-ferent.
+Here we have summarized some methods that can improve the performance of
+the model with little increase of inference time. These methods will be
+described in details below. We used the DepthSepConv mentioned by
+MobileNetV1{[}14{]} as our basic block. This block does not have
+operations such as shortcuts, so there are no additional operations such
+as concat or elementwise-add, these oper-ations will not only slow down
+the inference speed of the model, but also will not improve the accuracy
+on a small model. Furthermore, this block has been deeply optimized by
+the Intel CPU acceleration library, and the inference speed can surpass
+other lightweight blocks such as inverted-block or shufflenet-block. We
+stack these blocks to form a BaseNet similar to MobileNetV1{[}14{]}. We
+combine the BaseNet and some of the existing technologies to a more
+powerful network, namely PP-LCNet.
+
+\textbf{3.1. Better activation function}
+
+As we all know, the quality of the activation function of-ten determines
+the performance of the network. Since the activation function of network
+is changed from Sigmoid to ReLU, the performance of the network has been
+greatly im-proved. In recent years, more and more activation functions
+have emerged that go beyond ReLU. After EfficientNet{[}19{]} used the
+Swish activation function to show better perfor-mance, the author of
+MobileNetV3{[}20{]} upgraded it to H-Swish, thus avoiding a large number
+of exponential opera-tions. Since then, many lightweight networks also
+use this activation function. We also replaced the activation function
+in BaseNet from ReLU to H-Swish. The performance has been greatly
+improved, while the inference time has hardly changed.
+
+\begin{quote}
+3
+\end{quote}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+Model
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Params(M)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+FLOPs(M)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Top-1 Acc.(\%)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Top-5 Acc.(\%)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Latency(ms)
+\end{minipage} \\
+\midrule()
+\endhead
+\multicolumn{6}{@{}>{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{1.0000} + 10\tabcolsep}@{}}{%
+} \\
+\bottomrule()
+\end{longtable}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+PP-LCNet 0.25x
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+1.5
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+18
+\end{minipage} \\
+\midrule()
+\endhead
+PP-LCNet-0.35x & 1.6 & 29 \\
+PP-LCNet-0.5x & 1.9 & 47 \\
+PP-LCNet-0.75x & 2.4 & 99 \\
+PP-LCNet-1x & 3.0 & 161 \\
+PP-LCNet-1.5x & 4.5 & 342 \\
+PP-LCNet-2x & 6.5 & 590 \\
+PP-LCNet-2.5x & 9.0 & 906 \\
+\bottomrule()
+\end{longtable}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+51.86\\
+58.09\\
+63.14\\
+68.18\\
+71.32\\
+73.71\\
+75.18\\
+76.60
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+75.65\\
+80.83\\
+84.66\\
+88.30\\
+90.03\\
+91.53\\
+92.27\\
+93.00
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+1.74\\
+1.92\\
+2.05\\
+2.29\\
+2.46\\
+3.19\\
+4.27\\
+5.39
+\end{quote}\strut
+\end{minipage} \\
+\midrule()
+\endhead
+\begin{minipage}[t]{\linewidth}\raggedright
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{PP-LCNet-0.5x*}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{1.9}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{47}
+\end{minipage} \\
+\midrule()
+\endhead
+\textbf{PP-LCNet-1x*} & \textbf{3.0} & \textbf{161} \\
+\textbf{PP-LCNet-2.5x*} & \textbf{9.0} & \textbf{906} \\
+\bottomrule()
+\end{longtable}
+\end{minipage} & \begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+\textbf{66.10}\\
+\textbf{74.39}\\
+\textbf{80.82}
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+\textbf{86.46}\\
+\textbf{92.09}\\
+\textbf{95.33}
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+\textbf{2.05}\\
+\textbf{2.46}\\
+\textbf{5.39}
+\end{quote}\strut
+\end{minipage} \\
+\bottomrule()
+\end{longtable}
+
+Table 2. Indicators of PP-LCNet of different scales, where * means it is
+trained using SSLD{[}28{]} distillation method. Latency tested on
+Intel®Xeon®Gold 6148 Processor with batch size of 1 and MKLDNN enabled,
+the number of thread is 10.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+Model
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Params(M)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+FLOPs(M)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Top-1 Acc.(\%)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Top-5 Acc.(\%)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Latency(ms)
+\end{minipage} \\
+\midrule()
+\endhead
+\multicolumn{6}{@{}>{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{1.0000} + 10\tabcolsep}@{}}{%
+} \\
+\bottomrule()
+\end{longtable}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+MobileNetV2-0.25x\\
+MobileNetV3-small-0.35x ShuffleNetV2-0.33x\\
+\textbf{PP-LCNet-0.25x}\strut
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+1.5\\
+1.7\\
+0.6\\
+\textbf{1.5}
+\end{quote}\strut
+\end{minipage} \\
+\midrule()
+\endhead
+\bottomrule()
+\end{longtable}\strut
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+34\\
+15\\
+24\\
+\textbf{18}
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+53.21\\
+53.03\\
+53.73\\
+\textbf{51.86}
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+76.52\\
+76.37\\
+77.05\\
+\textbf{75.65}
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+2.47\\
+3.02\\
+4.30\\
+\textbf{1.74}
+\end{quote}\strut
+\end{minipage} \\
+\midrule()
+\endhead
+\begin{minipage}[t]{\linewidth}\raggedright
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+MobileNetV2-0.5x\\
+MobileNetV3-large-0.35x ShuffleNetV2-0.5x\\
+\textbf{PP-LCNet-0.5x}\strut
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+2.0\\
+2.1\\
+1.4\\
+\textbf{1.9}
+\end{quote}\strut
+\end{minipage} \\
+\midrule()
+\endhead
+\bottomrule()
+\end{longtable}\strut
+\end{minipage} & \begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+99\\
+41\\
+43\\
+\textbf{47}
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+65.03\\
+64.32\\
+60.32\\
+\textbf{63.14}
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+85.72\\
+85.46\\
+82.26\\
+\textbf{84.66}
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+2.85\\
+3.68\\
+4.65\\
+\textbf{2.05}
+\end{quote}\strut
+\end{minipage} \\
+\begin{minipage}[t]{\linewidth}\raggedright
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.5000}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+MobileNetV1-1x\\
+MobileNetV2-1x\\
+MobileNetV3-small-1.25x ShuffleNetV2-1.5x\\
+\textbf{PP-LCNet-1x}\strut
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+4.3\\
+3.5\\
+3.6\\
+3.5\\
+\textbf{3.0}
+\end{quote}\strut
+\end{minipage} \\
+\midrule()
+\endhead
+\bottomrule()
+\end{longtable}\strut
+\end{minipage} & \begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+578\\
+327\\
+100\\
+301\\
+\textbf{161}
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+70.99\\
+72.15\\
+70.67\\
+71.63\\
+\textbf{71.32}
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+89.68\\
+90.65\\
+89.51\\
+90.15\\
+\textbf{90.03}
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+3.38\\
+4.26\\
+3.95\\
+-\\
+\textbf{2.46}
+\end{quote}\strut
+\end{minipage} \\
+\bottomrule()
+\end{longtable}
+
+Table 3. Comparison of state-of-the-art light networks over
+classification accuracy. Latency tested on Intel®Xeon®Gold 6148
+Processor with batch size of 1 and MKLDNN enabled, the number of thread
+is 10.
+
+\textbf{3.4. Larger dimensional} 1 \emph{×} 1 \textbf{conv layer after
+GAP} In our PP-LCNet, the output dimension of the network after GAP is
+small. And directly appending the final classi-fication layer will lose
+the combination of features. In order to give the network a stronger
+fitting ability, we appended a 1280-dimensional size 1 \emph{×} 1
+conv(equivalent to FC layer) after the final GAP layer, which would
+allow for more stor-age of the model with little increase of inference
+time.
+
+With these four changes, our model performs well on the
+ImageNet-1k{[}27{]}, and table 3 lists the metrics against other
+lightweight models on Intel CPUs.
+
+\textbf{4. Experiment}
+
+\textbf{4.1. Implementation Details}
+
+For fair comparsions, we reimplement the models of MobileNetV1{[}14{]},
+MobileNetV2{[}15{]}, MobileNetV3{[}20{]},
+
+\begin{quote}
+4
+
+of size 224 \emph{×} 224. Table 2 shows the PP-LCNet's top-1 and top-5
+validation accuracy and inference time of differ-ent scales.
+Furthermore, when the SSLD{[}28{]} distillation method is used, the
+accuracy of the model can be greatly improved. Table 3 shows the
+comparison of PP-LCNet and state-of-the-art models. Compared with other
+light models, PP-LCNet has shown strong competitiveness.
+
+\textbf{4.3. Object Detection}
+
+For object detection task, all models in Table 4 are trained on
+COCO-2017{[}30{]} training set with 80 classes and 118k images, and
+evaluated on COCO-2017{[}30{]} validation set with 5000 images using the
+common COCO AP met-ric of a single scale. We used the lightweight
+PicoDet de-veloped by PaddleDection3as our baseline method. Ta-ble 4
+shows the object detection results of PP-LCNet and MobileNetV3{[}20{]}
+as the backbone. The entire network is trained with stochastic gradient
+descent (SGD) for 146K it-erations with a minibatch of 224 images
+distributed on 4 GPUs. The learning rate schedule is cosine from 0.3 as
+base learning rate for 280 epochs. Weight decay is set as 1e-4, and
+momentum is set as 0.9. Impressively, the PP-LCNet backbone greatly
+improves the mAP on COCO{[}30{]} and in-ference speed compared with
+MobileNetV3{[}20{]}.
+
+ule with a power of 0.9. All the models are trained for 80K iterations
+with the batch-size of 32 on 4 V100 GPUs.
+\end{quote}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2000}}@{}}
+\toprule()
+\multicolumn{5}{@{}>{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{1.0000} + 8\tabcolsep}@{}}{%
+\begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+We use MobileNetV3{[}20{]} as backbone for compari-
+\end{quote}
+\end{minipage}} \\
+\midrule()
+\endhead
+son. &
+\multicolumn{4}{>{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.8000} + 6\tabcolsep}@{}}{%
+\begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+As shown in Table 5, PP-LCNet-0.5x outperforms
+\end{quote}
+\end{minipage}} \\
+\multicolumn{5}{@{}>{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{1.0000} + 8\tabcolsep}@{}}{%
+\multirow{2}{*}{\begin{minipage}[t]{\linewidth}\raggedright
+\begin{quote}
+MobileNetV3-large-0.5x{[}20{]} by 2.94\% on mIoU, but the inference time
+is reduced by 53ms. Compared with larger models, PP-LCNet also has
+strong performance. When PP-LCNet-1x is used as backbone, mIOU of model
+is 1.5\% higher than MobileNetV3-large-0.75x, but the inference time is
+reduced by 55ms.
+\end{quote}
+\end{minipage}}} \\
+ \\
+& & & & \\
+& & & & \\
+& & & & \\
+\bottomrule()
+\end{longtable}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1667}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+Activation
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+SE block
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+large-kernel
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+last-1x1 conv
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Top-1 Acc(\%)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Latency(ms)
+\end{minipage} \\
+\midrule()
+\endhead
+\multicolumn{6}{@{}>{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{1.0000} + 10\tabcolsep}@{}}{%
+} \\
+\bottomrule()
+\end{longtable}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule()
+\multirow{2}{*}{\begin{minipage}[b]{\linewidth}\raggedright
+✓
+\end{minipage}} &
+\multirow{2}{*}{\begin{minipage}[b]{\linewidth}\raggedright
+✓
+\end{minipage}} & \begin{minipage}[b]{\linewidth}\raggedright
+✓
+\end{minipage} \\
+& & \multirow{2}{*}{\begin{minipage}[b]{\linewidth}\raggedright
+✓
+\end{minipage}} \\
+\multirow{2}{*}{\begin{minipage}[b]{\linewidth}\raggedright
+✓
+\end{minipage}} &
+\multirow{2}{*}{\begin{minipage}[b]{\linewidth}\raggedright
+✓
+\end{minipage}} \\
+& & \multirow{2}{*}{\begin{minipage}[b]{\linewidth}\raggedright
+✓
+\end{minipage}} \\
+\begin{minipage}[b]{\linewidth}\raggedright
+✓
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+✓
+\end{minipage} \\
+\midrule()
+\endhead
+\bottomrule()
+\end{longtable}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+✓\\
+✓\\
+✓
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+61.93\\
+62.51\\
+62.44\\
+59.91
+\end{quote}\strut
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\begin{quote}
+1.94\\
+1.87\\
+2.01\\
+1.85
+\end{quote}\strut
+\end{minipage} \\
+\midrule()
+\endhead
+\begin{minipage}[t]{\linewidth}\raggedright
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+✓
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+✓
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+✓
+\end{minipage} \\
+\midrule()
+\endhead
+\bottomrule()
+\end{longtable}
+\end{minipage} & ✓ & 63.14 & 2.05 \\
+\bottomrule()
+\end{longtable}
+
+\begin{quote}
+Table 6. The impact of PP-LCNet-0.5x's performance on reducing a certain
+technology. Latency tested on Intel®Xeon®Gold 6148 Processor with batch
+size of 1 and MKLDNN enabled, the number of thread is 10.
+\end{quote}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule()
+\multirow{2}{*}{\begin{minipage}[b]{\linewidth}\raggedright
+Network
+\end{minipage}} &
+\multirow{2}{*}{\begin{minipage}[b]{\linewidth}\raggedright
+SE Location
+\end{minipage}} & \begin{minipage}[b]{\linewidth}\raggedright
+Top-1 Acc
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Latency
+\end{minipage} \\
+& & \begin{minipage}[b]{\linewidth}\raggedright
+(\%)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+(ms)
+\end{minipage} \\
+\midrule()
+\endhead
+\multirow{4}{*}{PP-LCNet-0.5x} & 1100000000000 & 61.73 & 2.06 \\
+& 0000001100000 & 62.17 & 2.03 \\
+& \textbf{0000000000011} & \textbf{63.14} & \textbf{2.05} \\
+& 1111111111111 & 64.27 & 3.80 \\
+\bottomrule()
+\end{longtable}
+
+\begin{quote}
+Table 7. Ablation experiment of SE module in different positions.
+Latency tested on Intel®Xeon®Gold 6148 Processor with batch size of 1
+and MKLDNN enabled, the number of thread is 10.
+
+tive. Our PP-LCNet chose the configuration in the third row of the
+table.
+\end{quote}
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 6\tabcolsep) * \real{0.2500}}@{}}
+\toprule()
+\multirow{2}{*}{\begin{minipage}[b]{\linewidth}\raggedright
+Network
+\end{minipage}} & \begin{minipage}[b]{\linewidth}\raggedright
+Large-kernel
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Top-1 Acc
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Latency
+\end{minipage} \\
+& \begin{minipage}[b]{\linewidth}\raggedright
+location
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+(\%)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+(ms)
+\end{minipage} \\
+\midrule()
+\endhead
+\multirow{3}{*}{PP-LCNet-0.5x} & 1111111111111 & 63.22 & 2.08 \\
+& 1111111000000 & 62.70 & 2.07 \\
+& \textbf{0000001111111} & \textbf{63.14} & \textbf{2.05} \\
+\bottomrule()
+\end{longtable}
+
+\begin{quote}
+Table 8. The impact of large-kernel in different locations.Latency
+tested on Intel®Xeon®Gold 6148 Processor with batch size of 1 and MKLDNN
+enabled, the number of thread is 10.
+
+\textbf{The impact of different techniques}. In PP-LCNet, we use 4
+different technologies to improve the performance of the model. Table 9
+lists the cumulative increase of differ-ent technologies on PP-LCNet,
+and Table 6 lists the im-pact of reducing different modules on PP-LCNet.
+It can be seen from the two tables that H-Swish and large-kernel can
+improve the performance of the model with almost no increase in
+inference time. Adding a small number of SE modules{[}26{]} can further
+improve the performance of the model. Using a larger FC layer after GAP
+will also greatly increase the accuracy. At the same time, perhaps
+because a relatively large matrix is involved here, the use of the
+dropout strategy can further improve the accuracy of the model.
+\end{quote}
+
+6
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3333}}@{}}
+\toprule()
+\begin{minipage}[b]{\linewidth}\raggedright
+Strategy
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Top-1 Acc.(\%)
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Latency(ms)
+\end{minipage} \\
+\midrule()
+\endhead
+BaseNet & 55.58 & 1.61 \\
++h-swish & 58.18 & 1.66 \\
++large-kernel & 59.09 & 1.70 \\
++SE & 59.91 & 1.85 \\
++last-1x1 conv w/o dropout & 62.50 & 2.05 \\
+\textbf{+last-1x1 conv w/ dropout} & \textbf{63.14} & \textbf{2.05} \\
+\bottomrule()
+\end{longtable}
+
+\end{document}
