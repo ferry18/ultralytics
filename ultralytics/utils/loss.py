@@ -474,6 +474,16 @@ class AWDetectionLoss(v8DetectionLoss):
     
     def __init__(self, model, tal_topk: int = 10):
         """Initialize AWDetectionLoss with AWLoss instead of BboxLoss."""
+        # Check if model has args attribute, if not, use default hyperparameters
+        if not hasattr(model, 'args'):
+            # Create a simple namespace with default hyperparameters
+            from types import SimpleNamespace
+            model.args = SimpleNamespace(
+                box=7.5,
+                cls=0.5,
+                dfl=1.5,
+            )
+        
         super().__init__(model, tal_topk)
         # Replace bbox_loss with AWLoss
         self.aw_loss = AWLoss(normalization_constant=10.0).to(self.device)

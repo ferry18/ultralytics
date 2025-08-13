@@ -3,43 +3,41 @@
 
 # Parameters
 nc: 80  # number of classes
-scale: n  # model scale
 scales: 
   # [depth, width, max_channels]
-  n: [0.33, 0.25, 1024]
-  s: [0.33, 0.50, 1024]
-  m: [0.67, 0.75, 768]
-  l: [1.00, 1.00, 512]
-  x: [1.00, 1.25, 512]
+  n: [0.33, 0.25, 1024] 
+  s: [0.33, 0.50, 1024]  
+  m: [0.67, 0.75, 768]  
+  l: [1.00, 1.00, 512]  
+  x: [1.00, 1.25, 512]   
 
 # LWMP-YOLO backbone with PP-LCNet
 backbone:
-  # PP-LCNet backbone outputs P5/32 by default
-  # The paper shows using indices to reference earlier features
-  - [-1, 1, lcnet_075, []]  # 0 - Returns P5/32 with 384 channels
-  - [-1, 1, SPPF, [512, 5]]      # 1 - Reduced channels for lightweight model
-  - [-1, 2, C2PSA, [512]]        # 2
+  # PP-LCNet backbone - outputs 384 channels at P5/32
+  - [-1, 1, lcnet_075, []]      # 0 - PP-LCNet (384 ch out)
+  - [-1, 1, SPPF, [384, 5]]     # 1 - SPPF maintains channels
+  - [-1, 2, C2PSA, [384]]       # 2 - C2PSA maintains channels
 
-# LWMP-YOLO head with MAFR and P2 layer for small objects
+# LWMP-YOLO head with MAFR
 head:
-  # First upsample from P5 to P4
-  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 3
-  - [-1, 2, C3k2, [256, False]]  # 4 - Process P4 scale
+  # Upsample branch for multi-scale detection
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 3 - P5->P4
+  - [-1, 2, C3k2, [192, False]]                 # 4 (P4/16)
   
-  # Second upsample to P3
-  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 5
-  - [-1, 2, C3k2, [128, False]]  # 6 (P3/8-small)
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 5 - P4->P3  
+  - [-1, 2, C3k2, [96, False]]                  # 6 (P3/8)
   
-  # Third upsample to P2 (for small objects)
-  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 7
-  - [-1, 2, C3k2, [64, False]]   # 8 (P2/4-xsmall)
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 7 - P3->P2
+  - [-1, 2, C3k2, [48, False]]                  # 8 (P2/4) 
   
-  # Downsample back to P3
-  - [-1, 1, Conv, [128, 3, 2]]  # 9
-  - [[-1, 6], 1, Concat, [1]]   # 10 - cat with head P3
-  - [-1, 2, C3k2, [128, False]] # 11 (P3/8-small)
-  - [-1, 1, MAFR, []]           # 12 - MAFR for enhanced features
-  - [-1, 1, C3TR_LWMP, [128]]   # 13 - C3TR after MAFR for global context
+  # Process P3 scale with downsampling
+  - [-1, 1, Conv, [96, 3, 2]]                   # 9 - P2->P3
+  - [[-1, 6], 1, Concat, [1]]                   # 10 - concat with P3
+  - [-1, 2, C3k2, [192, False]]                 # 11
   
-  # Final detection head
-  - [[8, 13], 1, Detect, [nc]]  # Detect(P2, P3 with MAFR+C3TR)
+  # Apply MAFR and C3TR
+  - [-1, 1, MAFR, [192]]                        # 12 - MAFR module
+  - [-1, 1, C3TR_LWMP, [192]]                   # 13 - C3TR module
+  
+  # Detection head - P2 and P3 scales for small objects
+  - [[8, 13], 1, Detect, [nc]]                  # 14 - Detect(P2, P3)
