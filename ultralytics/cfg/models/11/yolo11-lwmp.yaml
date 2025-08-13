@@ -16,30 +16,30 @@ scales:
 backbone:
   # PP-LCNet backbone outputs P5/32 by default
   # The paper shows using indices to reference earlier features
-  - [-1, 1, lcnet_075, []]  # 0 - Returns P5/32
-  - [-1, 1, SPPF, [1024, 5]]     # 1
-  - [-1, 2, C2PSA, [1024]]       # 2
+  - [-1, 1, lcnet_075, []]  # 0 - Returns P5/32 with 384 channels
+  - [-1, 1, SPPF, [512, 5]]      # 1 - Reduced channels for lightweight model
+  - [-1, 2, C2PSA, [512]]        # 2
 
 # LWMP-YOLO head with MAFR and P2 layer for small objects
 head:
   # First upsample from P5 to P4
   - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 3
-  - [-1, 2, C3k2, [512, False]]  # 4 - Process P4 scale
+  - [-1, 2, C3k2, [256, False]]  # 4 - Process P4 scale
   
   # Second upsample to P3
   - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 5
-  - [-1, 2, C3k2, [256, False]]  # 6 (P3/8-small)
+  - [-1, 2, C3k2, [128, False]]  # 6 (P3/8-small)
   
   # Third upsample to P2 (for small objects)
   - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 7
-  - [-1, 2, C3k2, [128, False]]  # 8 (P2/4-xsmall)
+  - [-1, 2, C3k2, [64, False]]   # 8 (P2/4-xsmall)
   
   # Downsample back to P3
-  - [-1, 1, Conv, [256, 3, 2]]  # 9
-  - [[-1, 6], 1, Concat, [1]]  # 10 - cat with head P3
-  - [-1, 2, C3k2, [256, False]]  # 11 (P3/8-small)
-  - [-1, 1, MAFR, []]  # 12 - MAFR for enhanced features
-  - [-1, 1, C3TR_LWMP, [256]]  # 13 - C3TR after MAFR for global context
+  - [-1, 1, Conv, [128, 3, 2]]  # 9
+  - [[-1, 6], 1, Concat, [1]]   # 10 - cat with head P3
+  - [-1, 2, C3k2, [128, False]] # 11 (P3/8-small)
+  - [-1, 1, MAFR, []]           # 12 - MAFR for enhanced features
+  - [-1, 1, C3TR_LWMP, [128]]   # 13 - C3TR after MAFR for global context
   
   # Final detection head
   - [[8, 13], 1, Detect, [nc]]  # Detect(P2, P3 with MAFR+C3TR)
