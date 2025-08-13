@@ -59,6 +59,13 @@ from .block import (
     ResNetLayer,
     SCDown,
     TorchVision,
+    # New exports
+    MAFR,
+    C3TRv2,
+    DepSepConvHS,
+    HardSigmoid,
+    HardSwish,
+    SELayer,
 )
 from .conv import (
     CBAM,
@@ -136,6 +143,7 @@ __all__ = (
     "C2fAttn",
     "C3x",
     "C3TR",
+    "C3TRv2",
     "C3Ghost",
     "GhostBottleneck",
     "Bottleneck",
@@ -179,4 +187,9 @@ __all__ = (
     "TorchVision",
     "Index",
     "A2C2f",
+    "MAFR",
+    "DepSepConvHS",
+    "HardSigmoid",
+    "HardSwish",
+    "SELayer",
 )
