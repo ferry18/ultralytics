@@ -32,6 +32,9 @@ def train_lwmp_yolo():
             trainer.loss = AWDetectionLoss(trainer.model)
             print("Successfully replaced loss with AWDetectionLoss")
     
+    # Add the callback to the model
+    model.add_callback('on_pretrain_routine_start', setup_awloss)
+    
     # Train the model
     results = model.train(
         data='path/to/drone-dataset.yaml',  # Replace with your dataset config
@@ -57,10 +60,7 @@ def train_lwmp_yolo():
         mosaic=1.0,   # Mosaic augmentation
         mixup=0.0,    # Mixup augmentation
         copy_paste=0.0,  # Copy-paste augmentation
-        auto_augment='randaugment',
-        callbacks={
-            'on_pretrain_routine_start': setup_awloss  # Setup AWLoss
-        }
+        auto_augment='randaugment'
     )
     
     # After training, apply pruning
