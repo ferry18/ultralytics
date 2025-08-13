@@ -1,4 +1,4 @@
-﻿Root: ultralytics-main (7)
+Root: ultralytics-main (7)
 |-- LMWP-YOLO
 |   |-- images
 |   |   |-- 2025_08_05_34f8389150f57116e76bg-04.jpg
@@ -348,26 +348,26 @@
 |   |   |   |   |   |   |   |-- train.md
 |   |   |   |   |   |   |   |-- val.md
 |   |   |   |   |   |   |-- obb
-|   |   |   |   |   |   |   |-- predict.md
-|   |   |   |   |   |   |   |-- train.md
-|   |   |   |   |   |   |   |-- val.md
+|   |   |   |   |   |   |-- predict.md
+|   |   |   |   |   |   |-- train.md
+|   |   |   |   |   |   |-- val.md
 |   |   |   |   |   |   |-- pose
-|   |   |   |   |   |   |   |-- predict.md
-|   |   |   |   |   |   |   |-- train.md
-|   |   |   |   |   |   |   |-- val.md
+|   |   |   |   |   |   |-- predict.md
+|   |   |   |   |   |   |-- train.md
+|   |   |   |   |   |   |-- val.md
 |   |   |   |   |   |   |-- segment
-|   |   |   |   |   |   |   |-- predict.md
-|   |   |   |   |   |   |   |-- train.md
-|   |   |   |   |   |   |   |-- val.md
+|   |   |   |   |   |   |-- predict.md
+|   |   |   |   |   |   |-- train.md
+|   |   |   |   |   |   |-- val.md
 |   |   |   |   |   |   |-- world
-|   |   |   |   |   |   |   |-- train.md
-|   |   |   |   |   |   |   |-- train_world.md
-|   |   |   |   |   |   |-- yoloe
-|   |   |   |   |   |   |   |-- predict.md
-|   |   |   |   |   |   |   |-- train.md
-|   |   |   |   |   |   |   |-- train_seg.md
-|   |   |   |   |   |   |   |-- val.md
-|   |   |   |   |   |   |-- model.md
+|   |   |   |   |   |   |-- train.md
+|   |   |   |   |   |   |-- train_world.md
+|   |   |   |   |   |-- yoloe
+|   |   |   |   |   |-- predict.md
+|   |   |   |   |   |-- train.md
+|   |   |   |   |   |-- train_seg.md
+|   |   |   |   |   |-- val.md
+|   |   |   |   |   |-- model.md
 |   |   |   |   |-- nn
 |   |   |   |   |   |-- modules
 |   |   |   |   |   |   |-- activation.md
@@ -908,3 +908,10 @@
 |   |-- README.md
 |   |-- README.zh-CN.md
 |-- PROJECT_TREE.txt
+
+Added/Modified for LMWP-YOLO implementation:
+- ultralytics/nn/modules/block.py: added HardSigmoid, HardSwish, SELayer, DepSepConvHS, StdPool, MCAGate, MCALayer, LightweightMSFFM, MiniResidualBlock, MAFR, C3TRv2; updated __all__
+- ultralytics/nn/backbone/pplcnet.py: new PP-LCNet detection backbone (lcnet_075)
+- ultralytics/nn/tasks.py: registered MAFR, C3TRv2, and lcnet_075 in parser
+- ultralytics/utils/loss.py: replaced IoU with AWLoss (NWD + area/occlusion/scale), DFL preserved
+- ultralytics/cfg/models/11/yolo11.yaml: replaced with LCbackbone + MAFR neck + C3TRv2 + Detect

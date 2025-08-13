@@ -112,6 +112,14 @@ class BboxLoss(nn.Module):
         """Initialize the BboxLoss module with regularization maximum and DFL settings."""
         super().__init__()
         self.dfl_loss = DFLoss(reg_max) if reg_max > 1 else None
+        # AWLoss hyperparameters (fixed, no toggles)
+        self.nwd_c = 640.0 * (2 ** 0.5)  # normalization constant ~ diag of image; refined at runtime with imgsz
+        self.aw_alpha = 10.0
+        self.aw_a0 = 0.05
+        self.aw_beta = 0.3
+        self.aw_topk = 5
+        self.aw_tocc = 0.3
+        self.aw_lscale = 0.2
 
     def forward(
         self,
@@ -123,20 +131,78 @@ class BboxLoss(nn.Module):
         target_scores_sum: torch.Tensor,
         fg_mask: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Compute IoU and DFL losses for bounding boxes."""
-        weight = target_scores.sum(-1)[fg_mask].unsqueeze(-1)
-        iou = bbox_iou(pred_bboxes[fg_mask], target_bboxes[fg_mask], xywh=False, CIoU=True)
-        loss_iou = ((1.0 - iou) * weight).sum() / target_scores_sum
+        """Compute AWLoss (NWD with area/occlusion/scale terms) and DFL."""
+        pos = fg_mask
+        if pos.sum() == 0:
+            loss_aw = torch.tensor(0.0, device=pred_bboxes.device)
+            loss_dfl = torch.tensor(0.0, device=pred_bboxes.device)
+            return loss_aw, loss_dfl
+
+        # Update normalization constant from max(width,height) if available (approx using ranges of bboxes)
+        with torch.no_grad():
+            # estimate image diagonal from max box extents
+            if target_bboxes.numel():
+                mxw = (target_bboxes[..., 2] - target_bboxes[..., 0]).max().item()
+                mxh = (target_bboxes[..., 3] - target_bboxes[..., 1]).max().item()
+                diag = (mxw**2 + mxh**2) ** 0.5
+                if diag > 0:
+                    self.nwd_c = float(diag)
+
+        # Areas and normalization
+        tb = target_bboxes[pos]  # xyxy in feature space (decoded)
+        pb = pred_bboxes[pos]
+        # convert to cx, cy, w, h
+        tw = (tb[:, 2] - tb[:, 0]).clamp_(1e-6)
+        th = (tb[:, 3] - tb[:, 1]).clamp_(1e-6)
+        tcx = (tb[:, 0] + tb[:, 2]) * 0.5
+        tcy = (tb[:, 1] + tb[:, 3]) * 0.5
+        pw = (pb[:, 2] - pb[:, 0]).clamp_(1e-6)
+        ph = (pb[:, 3] - pb[:, 1]).clamp_(1e-6)
+        pcx = (pb[:, 0] + pb[:, 2]) * 0.5
+        pcy = (pb[:, 1] + pb[:, 3]) * 0.5
+
+        # W2 distance using simplified form: ||[cx,cy,w/2,h/2]_p - [..]_t||_2
+        dv = torch.stack([pcx - tcx, pcy - tcy, 0.5 * (pw - tw), 0.5 * (ph - th)], dim=1)
+        w2 = (dv.pow(2).sum(dim=1)).clamp_min(0.0)
+        # Normalize constant updated externally via imgsz; keep default here
+        nwd = torch.exp(-w2.sqrt() / self.nwd_c)
+        l_box = 1.0 - nwd
+
+        # Area weight: use GT area in same space; normalize by max area in batch of positives
+        t_area = (tw * th)
+        amax = t_area.max().clamp_min(1.0)
+        a_norm = (t_area / amax).clamp_(0.0, 1.0)
+        w_area = torch.sigmoid(self.aw_alpha * (self.aw_a0 - a_norm))
+
+        # Scale difference term
+        l_scale = (tw.log() - pw.log()).abs() + (th.log() - ph.log()).abs()
+
+        # Occlusion-aware factor via local overlap among positives (pairwise IoU on predicted bboxes)
+        with torch.no_grad():
+            # Gather only positives' predicted boxes and compute pairwise IoU per image approx (global for simplicity)
+            pb_all = pred_bboxes[pos]
+            iou_mat = bbox_iou(pb_all, pb_all, xywh=False, CIoU=False)  # (P,P)
+            iou_mat.fill_diagonal_(0.0)
+            # top-k mean above threshold
+            topk = min(self.aw_topk, max(1, pb_all.shape[0] - 1))
+            vals, _ = torch.topk(iou_mat, k=topk, dim=1)
+            occ = torch.where(vals > self.aw_tocc, vals, torch.zeros_like(vals))
+            w_occ = 1.0 + self.aw_beta * (occ.sum(dim=1) / topk)
+
+        weight = target_scores.sum(-1)[pos].clamp_min(1e-9)
+        # Combine (apply same weighting scheme as original IoU loss)
+        loss_aw = ((l_box + self.aw_lscale * l_scale) * w_area * w_occ)  # (P,)
+        loss_aw = (loss_aw * weight).sum() / target_scores_sum
 
         # DFL loss
         if self.dfl_loss:
             target_ltrb = bbox2dist(anchor_points, target_bboxes, self.dfl_loss.reg_max - 1)
-            loss_dfl = self.dfl_loss(pred_dist[fg_mask].view(-1, self.dfl_loss.reg_max), target_ltrb[fg_mask]) * weight
+            loss_dfl = self.dfl_loss(pred_dist[pos].view(-1, self.dfl_loss.reg_max), target_ltrb[pos]) * weight.unsqueeze(-1)
             loss_dfl = loss_dfl.sum() / target_scores_sum
         else:
             loss_dfl = torch.tensor(0.0).to(pred_dist.device)
 
-        return loss_iou, loss_dfl
+        return loss_aw, loss_dfl
 
 
 class RotatedBboxLoss(BboxLoss):

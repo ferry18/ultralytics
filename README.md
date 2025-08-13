@@ -283,3 +283,13 @@ For bug reports and feature requests related to Ultralytics software, please vis
   <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="3%" alt="space">
   <a href="https://discord.com/invite/ultralytics"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-discord.png" width="3%" alt="Ultralytics Discord"></a>
 </div>
+
+## LMWP-YOLO modifications (LCbackbone, MAFR, AWLoss, Pruning, C3TR)
+
+- Backbone: Replaced YOLO11 backbone with a PP-LCNet-like stack using depthwise separable convs with H-Swish and selective SE. See `ultralytics/cfg/models/11/yolo11.yaml` and `DepSepConvHS`.
+- Neck: Implemented MAFR modules (multidimensional collaborative attention + lightweight MSFF + micro residual) in top-down and bottom-up PAN. See `MAFR` in `ultralytics/nn/modules/block.py`.
+- Head: Added `C3TRv2`, a transformer-enhanced C3 module for global context.
+- Loss: Replaced IoU box loss with AWLoss (area-weighted NWD + scale term + occlusion-aware factor) while retaining DFL and BCE. See `ultralytics/utils/loss.py`.
+- Pruning: Provided `tools/prune_awl1.py` for L1-norm structured filter pruning.
+
+Train as usual with Ultralytics trainers; no toggles are required as AWLoss is built-in. Adjust batch size and epochs per your hardware. The model expects 640x640 by default.
