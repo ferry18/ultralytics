@@ -89,7 +89,7 @@ try:
         ]
     }
     
-    ch = [3]  # Input channels
+    ch = 3  # Input channels (integer, not list!)
     model, save = parse_model(deepcopy(test_yaml), ch=ch, verbose=True)
     print("✓ parse_model successful")
     
