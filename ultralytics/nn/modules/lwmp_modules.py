@@ -18,7 +18,8 @@ from .block import Bottleneck, C3
 
 
 __all__ = ['HardSigmoid', 'HardSwish', 'SELayer', 'DepSepConv', 'PPLCNet', 'lcnet_075', 
-           'MAFR', 'MultiScaleFusion', 'MicroResidualBlock', 'C3TR_LWMP', 'L1FilterPruner', 'prune_model']
+           'LCNetBackbone', 'MAFR', 'MultidimensionalAttention', 'MultiScaleFusion', 
+           'MicroResidualBlock', 'C3TR_LWMP', 'TransformerLayer_LWMP', 'L1FilterPruner', 'prune_model']
 
 
 # PP-LCNet Components
@@ -187,26 +188,42 @@ class PPLCNet(nn.Module):
         return outputs
 
 
-def lcnet_075(c1=3, pretrained=False):
+class LCNetBackbone(nn.Module):
+    """PP-LCNet backbone wrapper for YOLO integration."""
+    def __init__(self, c1, c2=None, scale=0.75, pretrained=False):
+        """
+        Initialize LCNetBackbone.
+        
+        Args:
+            c1: Input channels (typically 3 for RGB)
+            c2: Output channels (not used, for compatibility)
+            scale: Model scale factor
+            pretrained: Whether to load pretrained weights
+        """
+        super().__init__()
+        self.backbone = PPLCNet(scale=scale, in_channels=c1)
+        # Store output channels for YOLO compatibility
+        self.out_channels = self.backbone.out_channels[-1]  # P5 channels
+        # Store all features for potential multi-scale access
+        self._features = []
+        
+    def forward(self, x):
+        # Get multi-scale features
+        self._features = self.backbone(x)
+        # Return the last feature (P5) for compatibility with YOLO head structure
+        return self._features[-1]  # Return P5/32
+
+
+def lcnet_075(c1, c2=None, pretrained=False):
     """
     Create PP-LCNet with 0.75x scale factor.
     
-    Returns a backbone that outputs a list of features instead of a single tensor.
-    This matches YOLO's multi-scale feature extraction pattern.
+    Args:
+        c1: Input channels
+        c2: Output channels (not used, for compatibility with YOLO)
+        pretrained: Whether to load pretrained weights
     """
-    class LCNetBackbone(nn.Module):
-        def __init__(self):
-            super().__init__()
-            self.backbone = PPLCNet(scale=0.75, in_channels=c1)
-            
-        def forward(self, x):
-            # Get multi-scale features
-            features = self.backbone(x)
-            # Return the last feature (P5) for compatibility with YOLO head structure
-            # The intermediate features can be accessed via indexing in the yaml
-            return features[-1]  # Return P5/32
-    
-    return LCNetBackbone()
+    return LCNetBackbone(c1, c2, scale=0.75, pretrained=pretrained)
 
 
 # MAFR Module Components
@@ -327,11 +344,21 @@ class MicroResidualBlock(nn.Module):
 
 class MAFR(nn.Module):
     """Multidimensional Attention Feature Refinement module."""
-    def __init__(self, channels):
+    def __init__(self, c1, c2=None):
+        """
+        Initialize MAFR module.
+        
+        Args:
+            c1: Input channels
+            c2: Output channels (if None, same as c1)
+        """
         super().__init__()
-        self.multidim_attention = MultidimensionalAttention(channels)
-        self.multiscale_fusion = MultiScaleFusion(channels)
-        self.micro_residual = MicroResidualBlock(channels)
+        c2 = c2 or c1  # Use c1 if c2 not specified
+        self.multidim_attention = MultidimensionalAttention(c1)
+        self.multiscale_fusion = MultiScaleFusion(c1)
+        self.micro_residual = MicroResidualBlock(c1)
+        # Add channel adjustment if needed
+        self.channel_adjust = nn.Conv2d(c1, c2, 1) if c1 != c2 else nn.Identity()
 
     def forward(self, x):
         # Apply multidimensional attention
@@ -342,6 +369,9 @@ class MAFR(nn.Module):
         
         # Micro residual refinement
         x = self.micro_residual(x)
+        
+        # Adjust channels if needed
+        x = self.channel_adjust(x)
         
         return x
 
