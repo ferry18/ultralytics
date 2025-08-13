@@ -69,6 +69,12 @@ from ultralytics.nn.modules import (
     YOLOESegment,
     v10Detect,
 )
+from ultralytics.nn.modules import (
+    lcnet_075,
+    LCNetBackbone,
+    MAFR,
+    C3TR_LWMP,
+)
 from ultralytics.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, YAML, colorstr, emojis
 from ultralytics.utils.checks import check_requirements, check_suffix, check_yaml
 from ultralytics.utils.loss import (
@@ -78,6 +84,7 @@ from ultralytics.utils.loss import (
     v8OBBLoss,
     v8PoseLoss,
     v8SegmentationLoss,
+    AWDetectionLoss,
 )
 from ultralytics.utils.ops import make_divisible
 from ultralytics.utils.patches import torch_load
@@ -1732,6 +1739,18 @@ def parse_model(d, ch, verbose=True):
             c2 = args[0]
             c1 = ch[f]
             args = [*args[1:]]
+        elif m in frozenset({lcnet_075, MAFR, C3TR_LWMP}):
+            # Handle LWMP modules that need c1, c2 arguments
+            c1 = ch[f]
+            if m is lcnet_075:
+                c2 = None  # lcnet_075 determines its own output channels
+                args = [c1, c2, *args]
+            elif m is MAFR:
+                c2 = c1  # MAFR preserves channels by default
+                args = [c1, c2, *args]
+            elif m is C3TR_LWMP:
+                c2 = args[0] if args else c1
+                args = [c1, c2, *args[1:]]
         else:
             c2 = ch[f]
 
@@ -1739,6 +1758,10 @@ def parse_model(d, ch, verbose=True):
         t = str(m)[8:-2].replace("__main__.", "")  # module type
         m_.np = sum(x.numel() for x in m_.parameters())  # number params
         m_.i, m_.f, m_.type = i, f, t  # attach index, 'from' index, type
+        
+        # Update c2 for modules that determine their own output channels
+        if hasattr(m_, 'out_channels'):
+            c2 = m_.out_channels
         if verbose:
             LOGGER.info(f"{i:>3}{str(f):>20}{n_:>3}{m_.np:10.0f}  {t:<45}{str(args):<30}")  # print
         save.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist

@@ -1,0 +1,43 @@
+# Ultralytics YOLO11-LWMP for small drone detection
+# Lightweight Multi-scale Wasserstein Pruned YOLO based on PP-LCNet backbone
+
+# Parameters
+nc: 80  # number of classes
+scales: 
+  # [depth, width, max_channels]
+  n: [0.33, 0.25, 1024] 
+  s: [0.33, 0.50, 1024]  
+  m: [0.67, 0.75, 768]  
+  l: [1.00, 1.00, 512]  
+  x: [1.00, 1.25, 512]   
+
+# LWMP-YOLO backbone with PP-LCNet
+backbone:
+  # PP-LCNet backbone - outputs 384 channels at P5/32
+  - [-1, 1, lcnet_075, []]      # 0 - PP-LCNet (384 ch out)
+  - [-1, 1, SPPF, [384, 5]]     # 1 - SPPF maintains channels
+  - [-1, 2, C2PSA, [384]]       # 2 - C2PSA maintains channels
+
+# LWMP-YOLO head with MAFR
+head:
+  # Upsample branch for multi-scale detection
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 3 - P5->P4
+  - [-1, 2, C3k2, [192, False]]                 # 4 (P4/16)
+  
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 5 - P4->P3  
+  - [-1, 2, C3k2, [96, False]]                  # 6 (P3/8)
+  
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]  # 7 - P3->P2
+  - [-1, 2, C3k2, [48, False]]                  # 8 (P2/4) 
+  
+  # Process P3 scale with downsampling
+  - [-1, 1, Conv, [96, 3, 2]]                   # 9 - P2->P3
+  - [[-1, 6], 1, Concat, [1]]                   # 10 - concat with P3
+  - [-1, 2, C3k2, [192, False]]                 # 11
+  
+  # Apply MAFR and C3TR
+  - [-1, 1, MAFR, [192]]                        # 12 - MAFR module
+  - [-1, 1, C3TR_LWMP, [192]]                   # 13 - C3TR module
+  
+  # Detection head - P2 and P3 scales for small objects
+  - [[8, 13], 1, Detect, [nc]]                  # 14 - Detect(P2, P3)
