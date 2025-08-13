@@ -12,6 +12,7 @@ from ultralytics import YOLO
 from ultralytics.utils.loss import AWDetectionLoss
 from ultralytics.nn.modules import prune_model
 import torch
+from pathlib import Path
 
 
 def train_lwmp_yolo():

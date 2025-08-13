@@ -112,6 +112,8 @@ from .lwmp_modules import (
     MultiScaleFusion,
     MicroResidualBlock,
     C3TR_LWMP,
+    L1FilterPruner,
+    prune_model,
 )
 
 __all__ = (

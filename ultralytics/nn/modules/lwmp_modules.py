@@ -18,7 +18,7 @@ from .block import Bottleneck, C3
 
 
 __all__ = ['HardSigmoid', 'HardSwish', 'SELayer', 'DepSepConv', 'PPLCNet', 'lcnet_075', 
-           'MAFR', 'MultiScaleFusion', 'MicroResidualBlock', 'C3TR_LWMP', 'AWLoss']
+           'MAFR', 'MultiScaleFusion', 'MicroResidualBlock', 'C3TR_LWMP', 'L1FilterPruner', 'prune_model']
 
 
 # PP-LCNet Components
